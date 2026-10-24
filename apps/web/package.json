@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "vision:setup": "node scripts/setup-vision-assets.mjs --strict",
+    "predev": "node scripts/setup-vision-assets.mjs",
     "dev": "next dev --port 3000",
+    "prebuild": "node scripts/setup-vision-assets.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,6 +14,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.1.0",
     "@vigil/contracts": "workspace:*",
     "geist": "^1.8.2",
     "lucide-react": "^1.61.0",

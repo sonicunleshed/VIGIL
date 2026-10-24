@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored VIGIL Vision runtime installed by scripts/setup-vision-assets.mjs
+    "public/mediapipe/**",
+    "public/models/**",
   ]),
 ]);
 

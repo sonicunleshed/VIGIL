@@ -33,6 +33,12 @@ patients already waiting, with their triage vitals as history.
 
 Run one uvicorn worker only: the SSE broker is in-process.
 
+**VIGIL Vision** (`/vision`) runs pose estimation in the browser. `pnpm dev` and `pnpm build`
+install its assets automatically (MediaPipe WASM from npm, plus the 5.8 MB pose model downloaded
+once and checksum-verified into `apps/web/public/models/`). Run `pnpm --filter web vision:setup`
+to install them explicitly. After that the camera feature works offline. Use a real browser
+window for the camera (localhost is a secure context).
+
 ## Checks
 
 ```bash

@@ -146,3 +146,18 @@ scores alerts against scenario labels (definitions in docs/EVALUATION.md). `serv
 `/api/replay/compare` and `/api/evaluation` responses, caches per seed set, and records each run in
 `detector_runs` under a deterministic `run_id`. The web **Insights & Replay** screen shows only
 readings *delivered* by the scrubber time, so the chart shows what each detector could see.
+
+## VIGIL Vision (apps/web, Phase C: browser only)
+
+- `lib/vision/useCamera.ts`: camera starts only from a click after the consent box is ticked.
+  All tracks are stopped on Stop, unmount, tab hidden, page hide and device loss. Denied,
+  unavailable and disconnected states are explicit.
+- `lib/vision/usePoseTracker.ts`: loads MediaPipe Pose Landmarker (lite) from `public/` once,
+  GPU with CPU fallback. Inference runs about 10 FPS on a cancellable rAF loop. `numPoses: 2` is
+  used only so tracking can pause when two people are visible.
+- `lib/vision/classifier.ts`: pure heuristics over landmarks with hold times, hysteresis and
+  cooldowns. Events: `person_present`, `person_absent`, `posture_transition`,
+  `significant_motion` and experimental `possible_fall_like_motion` ("verify visually"). Tracking
+  pauses when more than one person is visible or key landmarks are poorly visible.
+- No video, frames or events leave the browser in Phase C (tested). Session binding to a patient
+  and server ingestion are Phase D.

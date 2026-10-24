@@ -1,0 +1,128 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Activity, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Suspense } from "react";
+import { NAV } from "@/lib/routes";
+
+type Props = {
+  collapsed: boolean;
+  onToggle?: () => void;
+  onNavigate?: () => void;
+};
+
+/** The route is read under Suspense so the shell can prerender without it. */
+export function SidebarNav(props: Props) {
+  return (
+    <Suspense fallback={<SidebarNavInner {...props} pathname={null} />}>
+      <SidebarNavWithPath {...props} />
+    </Suspense>
+  );
+}
+
+function SidebarNavWithPath(props: Props) {
+  return <SidebarNavInner {...props} pathname={usePathname()} />;
+}
+
+function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & { pathname: string | null }) {
+  const isActive = (href: string) =>
+    pathname !== null &&
+    (href === "/" ? pathname === "/" || pathname.startsWith("/patients/") : pathname.startsWith(href));
+
+  return (
+    <nav aria-label="Main" className="flex h-full flex-col">
+      <div className={`flex h-16 items-center gap-2.5 px-5 ${collapsed ? "justify-center px-0" : ""}`}>
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
+          <Activity aria-hidden className="size-4.5" />
+        </span>
+        {!collapsed && (
+          <span className="leading-tight">
+            <span className="block text-sm font-semibold tracking-wide text-fg">VIGIL</span>
+            <span className="block text-[11px] text-fg-3">Reassessment support</span>
+          </span>
+        )}
+      </div>
+
+      <div className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        {NAV.map((section) => (
+          <div key={section.title}>
+            {!collapsed && (
+              <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-3">
+                {section.title}
+              </p>
+            )}
+            <ul className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const base = `flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 ${
+                  collapsed ? "justify-center" : ""
+                }`;
+                if (item.planned) {
+                  return (
+                    <li key={item.href}>
+                      <span
+                        aria-disabled="true"
+                        title={`${item.label}: planned, not built yet`}
+                        className={`${base} cursor-not-allowed text-fg-3/70`}
+                      >
+                        <Icon aria-hidden className="size-4 shrink-0" />
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1">{item.label}</span>
+                            <span className="rounded border border-line px-1.5 py-px text-[10px] uppercase tracking-wide">
+                              Planned
+                            </span>
+                          </>
+                        )}
+                        {collapsed && <span className="sr-only">{item.label} (planned)</span>}
+                      </span>
+                    </li>
+                  );
+                }
+                const active = isActive(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      className={`${base} ${
+                        active ? "bg-raised text-fg" : "text-fg-2 hover:bg-raised/60 hover:text-fg"
+                      }`}
+                    >
+                      <Icon aria-hidden className={`size-4 shrink-0 ${active ? "text-accent" : ""}`} />
+                      {collapsed ? <span className="sr-only">{item.label}</span> : item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {onToggle && (
+        <div className="border-t border-line p-3">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`flex h-10 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-fg-3 hover:bg-raised hover:text-fg ${
+              collapsed ? "justify-center" : ""
+            }`}
+          >
+            {collapsed ? (
+              <PanelLeftOpen aria-hidden className="size-4" />
+            ) : (
+              <>
+                <PanelLeftClose aria-hidden className="size-4" />
+                Collapse
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+}

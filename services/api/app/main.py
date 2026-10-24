@@ -35,6 +35,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         runtime = Runtime(settings, make_session_factory(engine))
         runtime.broker.bind_loop(asyncio.get_running_loop())
         app.state.runtime = runtime
+        with write_lock, runtime.session_factory() as db:
+            # A fresh process has no runner task, so a persisted "running" state would be a lie.
+            if sim_service.pause_stale_run(db):
+                db.commit()
+                log.info("simulation was running before restart; now paused")
         if settings.autoload_scenario:
             with write_lock, runtime.session_factory() as db:
                 if sim_service.get_state(db) is None:

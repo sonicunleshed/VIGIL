@@ -28,6 +28,7 @@ export type StreamEventType =
   | "hello"
   | "observation"
   | "symptom_report"
+  | "alert_created" // emitted once detectors exist (Phase 3)
   | "alert_updated"
   | "simulation"
   | "reset"

@@ -58,6 +58,24 @@ def require_state(db: Session) -> SimulationState:
     return state
 
 
+def pause_stale_run(db: Session) -> bool:
+    """Marks a persisted `running` state as `paused`. Returns True if it changed anything."""
+    state = get_state(db)
+    if state is None or state.status != SimulationStatus.RUNNING.value:
+        return False
+    state.status = SimulationStatus.PAUSED.value
+    audit.record(
+        db,
+        at=state.clock,
+        actor="system",
+        action="simulation.paused_on_restart",
+        entity_type="scenario",
+        entity_id=state.scenario_id,
+    )
+    db.flush()
+    return True
+
+
 def clock(db: Session) -> datetime:
     return require_state(db).clock
 

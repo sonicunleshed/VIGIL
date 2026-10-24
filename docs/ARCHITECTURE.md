@@ -68,3 +68,45 @@ Alembic (`services/api/alembic`). The app runs `upgrade head` on startup;
 | Patients | Registered at reset (all have arrived before `t0`); not created via events. |
 | Vital kinds | heart_rate, resp_rate, spo2, sbp, temp — one event per measurement. |
 | Resolve without acknowledge | Allowed (open → resolved); acknowledge after resolve is 409. |
+
+## Web app (apps/web)
+
+- **One store.** `src/lib/store.tsx` holds patients, alerts and simulation state for every page.
+  SSE events trigger a coalesced snapshot refetch (no hand-patched state), so all screens agree
+  with each other and with the API. The connection indicator never says "Live" unless the
+  stream is connected.
+- **Pure display logic** lives in `src/lib/` (`monitoring.ts`, `queue.ts`, `timeline.ts`,
+  `evidence.ts`) and is unit-tested. Components take typed data and callbacks.
+- **Monitoring status** is a published mapping of a patient's unresolved alerts (shown in the UI
+  legend): prompt-review alert → urgent review; observed-change or patient-report alert →
+  reassessment due; only stale/quality alerts → information gap; none → monitoring (explicitly
+  "not a statement that the patient is stable").
+- **Charts** plot only real observations; the line breaks where readings are more than 40 min
+  apart (a display setting, not a clinical threshold). Questionable readings are hollow dots.
+- **Stack choice.** Tailwind with small in-repo primitives (`components/ui`) instead of shadcn/ui,
+  lucide icons, Recharts, local Geist fonts (no network at build or runtime).
+
+### Detector evidence contract (for Phase 3)
+
+The evidence panel reads `alert.evidence_json` defensively:
+
+```json
+{
+  "event_ids": ["<observation event ids the alert cites>"],
+  "rules": ["human-readable rule that fired, with its demo threshold"],
+  "limitations": ["what this alert could not account for"],
+  "baseline": { "optional": "baseline values used" }
+}
+```
+
+Detectors should also publish an `alert_created` SSE event; the web client already listens for it.
+
+### Backend gaps the UI spec needs
+
+| UI spec item | Missing backend piece |
+|---|---|
+| Alerts appearing in the live demo | Detectors (Phase 3). No alerts are generated yet. |
+| "Mark reassessment started" action, `reassessment_started` status | New alert action + status |
+| Simulation Lab scenario selector (stable / gradual / abrupt / missing) | Per-archetype scenario templates; today one mixed template exists |
+| Replay and Analytics with computed metrics | Evaluation/replay engine (Phase 5) |
+| Diastolic BP | Not in the observation vocabulary (systolic only) |

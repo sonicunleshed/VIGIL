@@ -86,3 +86,14 @@ def test_scenarios_catalog(client: TestClient) -> None:
     assert body["templates"][0]["name"] == generator.TEMPLATE_NAME
     assert body["templates"][0]["patient_count"] == 30
     assert body["loaded"]["scenario_id"] == "waiting-room-30:seed-42"
+
+
+def test_restart_does_not_report_a_dead_run_as_running(settings) -> None:
+    from app.main import create_app
+
+    with TestClient(create_app(settings)) as c:
+        assert c.post("/api/simulation/start", json={"speed": 1}).json()["status"] == "running"
+    # Process "restarts" against the same database: no runner task exists any more.
+    with TestClient(create_app(settings)) as c:
+        assert c.get("/api/simulation").json()["status"] == "paused"
+        assert c.get("/api/audit").json()[0]["action"] == "simulation.paused_on_restart"

@@ -15,7 +15,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 |---|---|---|
 | 0 | Monorepo, contracts, app boot | ✅ done |
 | 1 | Models, migrations, seeded scenarios, ingestion, CRUD, SSE | ✅ done |
-| 2 | Dashboard, patient detail, charts | next |
+| 2 | Nurse console: app shell, Overview, Patient detail (UI spec P0) | ✅ done |
 | 3 | Threshold / trend / hybrid detectors | — |
 | 4 | Live stream + review workflow integration | — |
 | 5 | Replay + evaluation | — |
@@ -29,7 +29,8 @@ pnpm bootstrap   # pnpm install + uv sync
 pnpm dev         # API on :8000, web on :3000
 ```
 
-Open http://localhost:3000. On first start the API migrates its SQLite DB
+Open http://localhost:3000 for the Overview command center; click any patient for the
+longitudinal detail view. On first start the API migrates its SQLite DB
 (`services/api/var/vigil.db`) and loads scenario `waiting-room-30` with seed 42: 30 synthetic
 patients already waiting, with their triage vitals as history.
 

@@ -14,7 +14,7 @@ from app.db import write_lock
 from app.domain import SimulationStatus
 from app.models import Observation, SymptomReport
 from app.schemas.outputs import ObservationOut, SymptomReportOut
-from app.services import simulation
+from app.services import queries, simulation
 from app.services.broker import Broker
 from app.services.simulation import AdvanceResult
 
@@ -52,6 +52,10 @@ class Runtime:
                         ),
                     },
                 )
+        for alert in result.alerts:
+            self.broker.publish(
+                "alert_created", {"alert": queries.alert_out(alert, []).model_dump(mode="json")}
+            )
         self.publish_state(db)
 
     def publish_state(self, db: Session) -> None:

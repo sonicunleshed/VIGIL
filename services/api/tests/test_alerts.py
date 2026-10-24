@@ -77,8 +77,9 @@ def test_invalid_transitions_and_actor(client: TestClient) -> None:
 
 def test_alert_filters(client: TestClient) -> None:
     alert_id = _make_alert(client)
-    assert len(client.get("/api/alerts?status=open").json()["alerts"]) == 1
-    assert client.get("/api/alerts?type=DATA_STALE").json()["alerts"] == []
+    mine = "/api/alerts?patient_id=P003"  # detectors may raise alerts for other patients
+    assert [a["id"] for a in client.get(f"{mine}&status=open").json()["alerts"]] == [alert_id]
+    assert client.get(f"{mine}&type=DATA_STALE").json()["alerts"] == []
     client.post(f"/api/alerts/{alert_id}/acknowledge", json={"actor_id": "nurse-demo-1"})
-    assert client.get("/api/alerts?status=open").json()["alerts"] == []
+    assert client.get(f"{mine}&status=open").json()["alerts"] == []
     assert client.get("/api/alerts?status=bogus").status_code == 422

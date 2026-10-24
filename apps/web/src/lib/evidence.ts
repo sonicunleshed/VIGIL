@@ -5,7 +5,7 @@
 import type { AlertOut, ObservationOut, PatientDetail, TimelineOut } from "@vigil/contracts";
 
 /**
- * Expected `evidence_json` shape from detectors (Phase 3 contract). Fields are optional and
+ * Expected `evidence_json` shape from detectors (see docs/ARCHITECTURE.md). Fields are optional and
  * read defensively so a detector that omits one never breaks the panel.
  */
 export type AlertEvidence = {

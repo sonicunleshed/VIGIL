@@ -29,7 +29,9 @@ ingest_observation / ingest_symptom_report
    ├─ events (immutable envelope, seq, out_of_order flag, duplicate_deliveries counter)
    └─ observations / symptom_reports (typed rows)
    ▼
-broker.publish → SSE subscribers   (detectors hook in here in Phase 3)
+detectors.engine.process → alerts (dedup/cooldown)
+   ▼
+broker.publish → SSE subscribers (observation, symptom_report, alert_created, …)
 ```
 
 ## Event envelope
@@ -86,7 +88,7 @@ Alembic (`services/api/alembic`). The app runs `upgrade head` on startup;
 - **Stack choice.** Tailwind with small in-repo primitives (`components/ui`) instead of shadcn/ui,
   lucide icons, Recharts, local Geist fonts (no network at build or runtime).
 
-### Detector evidence contract (for Phase 3)
+### Detector evidence contract
 
 The evidence panel reads `alert.evidence_json` defensively:
 
@@ -99,14 +101,40 @@ The evidence panel reads `alert.evidence_json` defensively:
 }
 ```
 
-Detectors should also publish an `alert_created` SSE event; the web client already listens for it.
+New alerts are published as `alert_created` SSE events.
 
 ### Backend gaps the UI spec needs
 
 | UI spec item | Missing backend piece |
 |---|---|
-| Alerts appearing in the live demo | Detectors (Phase 3). No alerts are generated yet. |
 | "Mark reassessment started" action, `reassessment_started` status | New alert action + status |
 | Simulation Lab scenario selector (stable / gradual / abrupt / missing) | Per-archetype scenario templates; today one mixed template exists |
 | Replay and Analytics with computed metrics | Evaluation/replay engine (Phase 5) |
 | Diastolic BP | Not in the observation vocabulary (systolic only) |
+
+## Detectors (services/api/app/detectors)
+
+Pure functions over an in-memory `PatientHistory`, so live detection and Phase 5 replay share
+code. All numbers live in `config.py` and are **unvalidated demonstration values**.
+
+| Detector | Role | Logic |
+|---|---|---|
+| `threshold` | Replay baseline | Latest reading of a vital outside a demo limit. Counts questionable readings. |
+| `trend` | Replay baseline | Per vital: Theil–Sen slope over 75 min (≥ 3 points) and change from baseline (median of first 2 readings) both past demo values. Quality-blind. |
+| `hybrid` | **Live alerts** | Limits + trends on good-quality readings only; ≥ 2 changed vitals (or limit and trend on one) → prompt review; symptom reports → `PATIENT_REPORT`; questionable or out-of-order readings → `DATA_QUALITY` (excluded from change detection); no observation for 45 min → `DATA_STALE`, dated at the moment it fell due. |
+
+**Engine** (`engine.py`). After each ingested event it loads the patient's sorted history,
+evaluates the hybrid, and creates alerts through `services.alerts.create_alert`. Each alert
+records detector name and version, family (`dedup_key`), evidence event ids, rules and
+limitations, and is written to the audit log.
+
+**Dedup.** A candidate is dropped while an alert in the same family is unresolved
+(acknowledged still counts), or within the family cooldown after the last one. An open
+prompt-review change alert also suppresses a lesser review one. Duplicate deliveries never re-run
+detection.
+
+**Determinism.** Observation rounds that share a delivery timestamp are ingested together
+before detection, so a round is judged as a whole. Staleness is evaluated before each round
+using only data received by then. Alert ids are UUIDv5 of detector, patient, family and creation
+time. A test runs the full scenario in one 180-minute step and in 7-minute steps and gets
+identical alerts.

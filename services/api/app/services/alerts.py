@@ -34,12 +34,16 @@ def create_alert(
     dedup_key: str,
     created_at: datetime,
 ) -> Alert:
-    """Used by detectors (Phase 3). Alert id is derived from the dedup key so a
-    replayed event stream reproduces identical alert ids."""
+    """Used by detectors. `dedup_key` names the alert family; the id is derived from detector,
+    patient, family and creation time, so replaying the same stream reproduces identical ids."""
     if db.get(Patient, patient_id) is None:
         raise NotFound(f"unknown patient '{patient_id}'")
     alert = Alert(
-        id=str(uuid.uuid5(ALERT_NAMESPACE, f"{detector}:{dedup_key}")),
+        id=str(
+            uuid.uuid5(
+                ALERT_NAMESPACE, f"{detector}:{patient_id}:{dedup_key}:{created_at.isoformat()}"
+            )
+        ),
         patient_id=patient_id,
         detector=detector,
         detector_version=detector_version,

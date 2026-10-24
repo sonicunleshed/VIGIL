@@ -8,7 +8,7 @@ commands run, test results and unresolved risks.
 |---|---|---|
 | API core, ingestion, SSE, persistence | Claude Code | `services/api/app/{api,models,schemas,services}/`, `app/main.py`, `app/db.py`, `alembic/` |
 | Web app | Claude Code | `apps/web/` |
-| Detectors | Claude Code (Phase 3) | `services/api/app/detectors/` |
+| Detectors | Claude Code | `services/api/app/detectors/` |
 | Simulator scenarios, evaluation, replay metrics | ChatGPT Astra (proposed) | `services/api/app/simulator/`, future `app/evaluation/`, `data/scenarios/` |
 | Docs and extra tests | ChatGPT Astra (proposed) | `docs/`, new files under `services/api/tests/` |
 | Contracts | generated — whoever changes schemas regenerates | `packages/contracts/` |

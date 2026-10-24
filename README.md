@@ -16,7 +16,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | 0 | Monorepo, contracts, app boot | ✅ done |
 | 1 | Models, migrations, seeded scenarios, ingestion, CRUD, SSE | ✅ done |
 | 2 | Nurse console: app shell, Overview, Patient detail (UI spec P0) | ✅ done |
-| 3 | Threshold / trend / hybrid detectors | — |
+| 3 | Threshold / trend / hybrid detectors; hybrid drives live alerts | ✅ done |
 | 4 | Live stream + review workflow integration | — |
 | 5 | Replay + evaluation | — |
 
@@ -51,7 +51,7 @@ pnpm contracts:check   # OpenAPI → TS types are up to date
  Next.js (apps/web) ──REST──▶ FastAPI (services/api) ──▶ SQLite (Alembic migrations)
         ▲                        │  ingest (idempotent) ─▶ events (immutable) ─▶ observations / reports
         └──────── SSE ───────────┤  simulation clock ─▶ scheduled scenario deliveries
-                                 └─ detectors (Phase 3) ─▶ alerts ─▶ clinician actions ─▶ audit log
+                                 └─ hybrid detector ─▶ alerts ─▶ clinician actions ─▶ audit log
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SAFETY.md](docs/SAFETY.md),
@@ -91,4 +91,5 @@ Interactive docs: http://localhost:8000/docs. Evaluation and replay endpoints ar
 
 - Synthetic data only; "ground truth" labels are scenario-author intent, not clinical outcomes.
 - No authentication beyond fixed demo actor IDs; no PHI support; single-process server.
-- No detector is implemented yet, so no alerts are generated in Phase 1.
+- Detector thresholds are unvalidated demonstration values tuned only against the synthetic
+  generator. Threshold and trend detectors exist as comparison baselines; only the hybrid runs live.

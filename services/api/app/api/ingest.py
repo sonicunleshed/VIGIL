@@ -6,6 +6,7 @@ from fastapi import APIRouter, Response, status
 
 from app.api.deps import DbDep, RuntimeDep
 from app.db import write_lock
+from app.detectors import engine
 from app.schemas.inputs import ObservationIn, SymptomReportIn
 from app.schemas.outputs import (
     ObservationIngestResult,
@@ -39,9 +40,10 @@ def post_observation(
     with write_lock:
         now = simulation.clock(db)
         outcome = ingest_observation(db, body, now, runtime.settings.future_tolerance_seconds)
+        new_alerts = engine.process(db, outcome, now)
         db.commit()
         if outcome.status == "created":
-            runtime.publish_advance(db, AdvanceResult([outcome]))
+            runtime.publish_advance(db, AdvanceResult([outcome], new_alerts))
     if outcome.status == "duplicate":
         response.status_code = status.HTTP_200_OK
     return ObservationIngestResult(
@@ -64,9 +66,10 @@ def post_symptom_report(
     with write_lock:
         now = simulation.clock(db)
         outcome = ingest_symptom_report(db, body, now, runtime.settings.future_tolerance_seconds)
+        new_alerts = engine.process(db, outcome, now)
         db.commit()
         if outcome.status == "created":
-            runtime.publish_advance(db, AdvanceResult([outcome]))
+            runtime.publish_advance(db, AdvanceResult([outcome], new_alerts))
     if outcome.status == "duplicate":
         response.status_code = status.HTTP_200_OK
     return SymptomReportIngestResult(

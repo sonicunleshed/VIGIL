@@ -93,7 +93,7 @@ export function VitalTrendChart({
   return (
     <div className="h-72 w-full" role="img" aria-label={`${meta.label} trend chart with ${inRange.length} observations`}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={series} margin={{ top: 16, right: 16, bottom: 4, left: -8 }}>
+        <ComposedChart data={series} margin={{ top: 16, right: 40, bottom: 4, left: -8 }}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
           <XAxis
             dataKey="t"

@@ -21,7 +21,8 @@ VIGIL is a **synthetic-data research demo**. These rules are enforced in code an
 ## Validation bounds are not thresholds
 
 `app/domain.py` bounds (e.g. heart rate 0–300 bpm) only reject typos and impossible values.
-Detector thresholds (Phase 3) will be labelled *unvalidated demonstration values*.
+Detector thresholds in `app/detectors/config.py` are labelled *unvalidated demonstration values*
+in code, in every alert's rule text, and in the UI.
 
 ## Generator drift is not physiology
 
@@ -32,13 +33,13 @@ are scenario-author intent.
 
 - Validation error responses omit submitted values.
 - No external analytics or logging of payloads; logs contain ids and counts only.
-- No production PHI support; no external network calls at runtime (fonts are system fonts).
+- No production PHI support; no external network calls at runtime (fonts are bundled locally).
 
 ## Known risks (tracked)
 
 | Risk | Mitigation |
 |---|---|
-| Alert fatigue | Dedup keys + cooldowns (Phase 3), false alerts per patient-hour metric (Phase 5) |
+| Alert fatigue | Alert families with unresolved-suppression and cooldowns; one stale reminder per patient, false alerts per patient-hour metric (Phase 5) |
 | Missed change | UI must never imply "no alert = safe"; standard clinical workflow retained |
 | Stale data | Explicit ages and unknown states; separate reminder type |
 | Reproducibility | Seeded generator, UUIDv5 ids, sim clock, fixture equality test |

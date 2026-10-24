@@ -13,6 +13,7 @@ from datetime import datetime
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.detectors import engine
 from app.domain import SimulationStatus, WorkflowStatus
 from app.errors import Conflict
 from app.models import (
@@ -37,6 +38,7 @@ from app.simulator import generator
 @dataclass
 class AdvanceResult:
     outcomes: list[IngestOutcome] = field(default_factory=list)
+    alerts: list[Alert] = field(default_factory=list)
 
     @property
     def created(self) -> int:
@@ -195,20 +197,36 @@ def advance_to(db: Session, until: datetime) -> AdvanceResult:
         .where(ScenarioDelivery.ordinal > state.cursor, ScenarioDelivery.deliver_at <= until)
         .order_by(ScenarioDelivery.ordinal)
     ).all()
-    for delivery in pending:
-        state.clock = max(state.clock, delivery.deliver_at)
-        envelope = ScenarioEnvelope.model_validate(delivery.envelope)
-        if envelope.event_type == "observation":
-            outcome = ingest_observation(
-                db, ObservationIn.model_validate(envelope.body), state.clock
-            )
-        else:
-            outcome = ingest_symptom_report(
-                db, SymptomReportIn.model_validate(envelope.body), state.clock
-            )
-        result.outcomes.append(outcome)
-        state.cursor = delivery.ordinal
+    # Deliveries sharing a timestamp (one observation round) are ingested together before
+    # detection runs, so a round is judged as a whole rather than one vital at a time.
+    i = 0
+    while i < len(pending):
+        at = pending[i].deliver_at
+        group = []
+        while i < len(pending) and pending[i].deliver_at == at:
+            group.append(pending[i])
+            i += 1
+        # Staleness that fell due before this round is judged on the data known by then.
+        result.alerts += engine.freshness(db, at)
+        state.clock = max(state.clock, at)
+        outcomes = []
+        for delivery in group:
+            envelope = ScenarioEnvelope.model_validate(delivery.envelope)
+            if envelope.event_type == "observation":
+                outcome = ingest_observation(
+                    db, ObservationIn.model_validate(envelope.body), state.clock
+                )
+            else:
+                outcome = ingest_symptom_report(
+                    db, SymptomReportIn.model_validate(envelope.body), state.clock
+                )
+            outcomes.append(outcome)
+            state.cursor = delivery.ordinal
+        result.outcomes += outcomes
+        for outcome in outcomes:
+            result.alerts += engine.process(db, outcome, state.clock)
     state.clock = max(state.clock, until)
+    result.alerts += engine.freshness(db, state.clock)
     if state.clock >= scenario.t_end:
         state.status = SimulationStatus.FINISHED.value
     db.flush()

@@ -17,7 +17,13 @@ import { formatClock } from "@/lib/format";
 import { buildSeries, CHART_GAP_SECONDS, type SeriesPoint } from "@/lib/monitoring";
 import type { VitalMeta } from "@/lib/vitals";
 
-export type ChartMarker = { at: string; kind: "symptom" | "alert"; label: string };
+export type ChartMarker = { at: string; kind: "symptom" | "alert" | "camera"; label: string };
+
+const MARKER_COLOR: Record<ChartMarker["kind"], string> = {
+  alert: "var(--st-due)",
+  symptom: "var(--st-info)",
+  camera: "var(--st-gap)",
+};
 
 type DotProps = { cx?: number; cy?: number; payload?: SeriesPoint };
 
@@ -121,12 +127,12 @@ export function VitalTrendChart({
             <ReferenceLine
               key={`${m.kind}-${m.at}-${i}`}
               x={Date.parse(m.at)}
-              stroke={m.kind === "alert" ? "var(--st-due)" : "var(--st-info)"}
+              stroke={MARKER_COLOR[m.kind]}
               strokeDasharray="4 3"
               label={{
                 value: m.label,
                 position: "insideTopLeft",
-                fill: m.kind === "alert" ? "var(--st-due)" : "var(--st-info)",
+                fill: MARKER_COLOR[m.kind],
                 fontSize: 10,
               }}
             />

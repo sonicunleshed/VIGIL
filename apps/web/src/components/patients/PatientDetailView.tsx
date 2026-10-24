@@ -11,7 +11,7 @@ import { VitalsCard } from "@/components/patients/VitalsCard";
 import { VitalTrendChart, type ChartMarker } from "@/components/patients/VitalTrendChart";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card, CardHeader, EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
-import { dataLimitations, observationIndex } from "@/lib/evidence";
+import { dataLimitations, observationIndex, visionIndex } from "@/lib/evidence";
 import { formatAge, formatClock, formatDuration } from "@/lib/format";
 import { lastObservation, monitoringStatus } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
@@ -88,6 +88,9 @@ export function PatientDetailView() {
   const meta = VITAL_BY_KIND[kind];
   const markers: ChartMarker[] = [
     ...detail.symptom_reports.map((s) => ({ at: s.reported_at, kind: "symptom" as const, label: "Report" })),
+    ...timeline.items.flatMap((i) =>
+      i.item_type === "vision_observation" ? [{ at: i.at, kind: "camera" as const, label: "Camera" }] : [],
+    ),
     ...patientAlerts.map((a) => ({ at: a.created_at, kind: "alert" as const, label: "Alert" })),
   ].filter((m) => Date.parse(m.at) >= from);
 
@@ -206,6 +209,7 @@ export function PatientDetailView() {
         <EvidencePanel
           alerts={patientAlerts}
           observations={observations}
+          vision={visionIndex(timeline)}
           limitations={dataLimitations(detail, timeline, LABELS)}
         />
       </div>

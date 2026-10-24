@@ -25,3 +25,15 @@ class Invalid(DomainError):
 
 class Forbidden(DomainError):
     status_code = 403
+
+
+class Unauthorized(DomainError):
+    status_code = 401
+
+
+class TooLarge(DomainError):
+    status_code = 413
+
+
+class RateLimited(DomainError):
+    status_code = 429

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AlertOut, ObservationOut } from "@vigil/contracts";
+import type { AlertOut, ObservationOut, VisionEventOut } from "@vigil/contracts";
 import { Check, ClipboardCheck, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button, Card, CardHeader } from "@/components/ui/primitives";
@@ -9,15 +9,24 @@ import { readEvidence } from "@/lib/evidence";
 import { formatClock } from "@/lib/format";
 import { ALERT_TYPE_LABEL, compareAlerts, URGENCY_LABEL } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
+import { EVENT_LABEL, type VisionEventType } from "@/lib/vision/classifier";
 import { VITAL_BY_KIND } from "@/lib/vitals";
 
-function AlertEvidenceBlock({ alert, observations }: { alert: AlertOut; observations: Map<string, ObservationOut> }) {
+function AlertEvidenceBlock({
+  alert,
+  observations,
+  vision,
+}: {
+  alert: AlertOut;
+  observations: Map<string, ObservationOut>;
+  vision: Map<string, VisionEventOut>;
+}) {
   const { run } = useVigil();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ev = readEvidence(alert);
-  const cited = ev.eventIds.map((id) => ({ id, obs: observations.get(id) }));
+  const cited = ev.eventIds.map((id) => ({ id, obs: observations.get(id), cam: vision.get(id) }));
 
   const act = async (fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -54,13 +63,19 @@ function AlertEvidenceBlock({ alert, observations }: { alert: AlertOut; observat
           <p className="mt-1 text-xs text-fg-3">This alert cites no specific observation events.</p>
         ) : (
           <ul className="mt-1 space-y-0.5">
-            {cited.map(({ id, obs }) => (
+            {cited.map(({ id, obs, cam }) => (
               <li key={id} className="tabular text-xs text-fg-2">
                 {obs ? (
                   <>
                     {VITAL_BY_KIND[obs.kind]?.short ?? obs.kind} {obs.value} {obs.unit} · observed{" "}
                     {formatClock(obs.observed_at, true)} UTC
                     {obs.quality === "questionable" ? " · questionable" : ""}
+                  </>
+                ) : cam ? (
+                  <>
+                    Camera: {EVENT_LABEL[cam.event_type as VisionEventType] ?? cam.event_type} · captured{" "}
+                    {formatClock(cam.captured_at, true)} (device clock) · score {cam.confidence_score.toFixed(2)} ·
+                    session {cam.session_id.slice(0, 8)}
                   </>
                 ) : (
                   <span className="font-mono text-fg-3">event {id.slice(0, 8)}…</span>
@@ -154,10 +169,12 @@ function AlertEvidenceBlock({ alert, observations }: { alert: AlertOut; observat
 export function EvidencePanel({
   alerts,
   observations,
+  vision,
   limitations,
 }: {
   alerts: AlertOut[];
   observations: Map<string, ObservationOut>;
+  vision: Map<string, VisionEventOut>;
   limitations: string[];
 }) {
   const active = alerts.filter((a) => a.status !== "resolved").sort(compareAlerts);
@@ -177,7 +194,7 @@ export function EvidencePanel({
             stable.
           </p>
         ) : (
-          active.map((a) => <AlertEvidenceBlock key={a.id} alert={a} observations={observations} />)
+          active.map((a) => <AlertEvidenceBlock key={a.id} alert={a} observations={observations} vision={vision} />)
         )}
         <div>
           <h3 className="text-[11px] font-semibold uppercase tracking-wide text-fg-3">What the data cannot tell us</h3>

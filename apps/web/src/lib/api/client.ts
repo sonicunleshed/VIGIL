@@ -10,6 +10,10 @@ import type {
   SimulationStateOut,
   StepResult,
   TimelineOut,
+  VisionEventIn,
+  VisionIngestResult,
+  VisionSessionCreatedOut,
+  VisionSessionOut,
 } from "@vigil/contracts";
 
 export const API_BASE = process.env.NEXT_PUBLIC_VIGIL_API ?? "http://localhost:8000";
@@ -71,6 +75,27 @@ export const api = {
   replayCatalog: (seed: number) => request<ReplayCatalogOut>(`/api/replay/catalog?seed=${seed}`),
   replayCompare: (seed: number, patientId: string) =>
     post<ReplayCompareOut>("/api/replay/compare", { seed, patient_id: patientId }),
+  createVisionSession: (patientId: string, modelVersion: string, deviceLabel: string | null) =>
+    post<VisionSessionCreatedOut>("/api/vision/sessions", {
+      patient_id: patientId,
+      actor_id: DEMO_ACTOR,
+      consent_acknowledged: true,
+      model_version: modelVersion,
+      device_label: deviceLabel,
+    }),
+  stopVisionSession: (sessionId: string, token: string, reason: string) =>
+    request<VisionSessionOut>(`/api/vision/sessions/${sessionId}/stop`, {
+      method: "POST",
+      headers: { "X-Vision-Token": token },
+      body: JSON.stringify({ reason }),
+      keepalive: true,
+    }),
+  postVisionEvent: (token: string, body: VisionEventIn) =>
+    request<VisionIngestResult>("/api/vision/events", {
+      method: "POST",
+      headers: { "X-Vision-Token": token },
+      body: JSON.stringify(body),
+    }),
   evaluation: (seeds: number[]) => request<EvaluationOut>(`/api/evaluation?seeds=${seeds.join(",")}`),
 };
 

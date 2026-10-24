@@ -56,6 +56,8 @@ const STREAM_TYPES = [
   "symptom_report",
   "alert_created",
   "alert_updated",
+  "vision_observation_created",
+  "vision_session",
   "simulation",
   "reset",
   "resync",

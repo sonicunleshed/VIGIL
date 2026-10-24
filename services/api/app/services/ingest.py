@@ -15,12 +15,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domain import EventType
 from app.errors import Conflict, Invalid, NotFound
-from app.models import Event, Observation, Patient, SymptomReport
+from app.models import Event, Observation, Patient, SymptomReport, VisionEvent
 from app.schemas.inputs import ObservationIn, SymptomReportIn
 
 IngestStatus = Literal["created", "duplicate"]
@@ -30,10 +31,10 @@ IngestStatus = Literal["created", "duplicate"]
 class IngestOutcome:
     status: IngestStatus
     event: Event
-    record: Observation | SymptomReport
+    record: Observation | SymptomReport | VisionEvent
 
 
-def canonical_payload(body: ObservationIn | SymptomReportIn) -> dict[str, Any]:
+def canonical_payload(body: BaseModel) -> dict[str, Any]:
     """JSON form used for duplicate comparison; equal instants compare equal across offsets."""
     data = body.model_dump(mode="json")
     for key, value in body:
@@ -42,7 +43,7 @@ def canonical_payload(body: ObservationIn | SymptomReportIn) -> dict[str, Any]:
     return data
 
 
-def _check_existing(db: Session, event_id: str, payload: dict[str, Any]) -> Event | None:
+def check_existing(db: Session, event_id: str, payload: dict[str, Any]) -> Event | None:
     existing = db.get(Event, event_id)
     if existing is None:
         return None
@@ -65,7 +66,7 @@ def _check_not_future(occurred_at: datetime, now: datetime, tolerance_s: int) ->
         )
 
 
-def _next_seq(db: Session) -> int:
+def next_seq(db: Session) -> int:
     return int(db.scalar(select(func.coalesce(func.max(Event.seq), 0))) or 0) + 1
 
 
@@ -74,7 +75,7 @@ def ingest_observation(
 ) -> IngestOutcome:
     event_id = str(body.event_id)
     payload = canonical_payload(body)
-    existing = _check_existing(db, event_id, payload)
+    existing = check_existing(db, event_id, payload)
     if existing is not None:
         obs = db.get(Observation, event_id)
         assert obs is not None
@@ -94,7 +95,7 @@ def ingest_observation(
     )
     event = Event(
         event_id=event_id,
-        seq=_next_seq(db),
+        seq=next_seq(db),
         patient_id=body.patient_id,
         event_type=EventType.OBSERVATION.value,
         occurred_at=body.observed_at,
@@ -128,7 +129,7 @@ def ingest_symptom_report(
 ) -> IngestOutcome:
     event_id = str(body.event_id)
     payload = canonical_payload(body)
-    existing = _check_existing(db, event_id, payload)
+    existing = check_existing(db, event_id, payload)
     if existing is not None:
         report = db.get(SymptomReport, event_id)
         assert report is not None
@@ -145,7 +146,7 @@ def ingest_symptom_report(
     )
     event = Event(
         event_id=event_id,
-        seq=_next_seq(db),
+        seq=next_seq(db),
         patient_id=body.patient_id,
         event_type=EventType.SYMPTOM_REPORT.value,
         occurred_at=reported_at,

@@ -44,6 +44,22 @@ class ObservationQuality(StrEnum):
 class EventType(StrEnum):
     OBSERVATION = "observation"
     SYMPTOM_REPORT = "symptom_report"
+    VISION_OBSERVATION = "vision_observation"
+
+
+class VisionEventType(StrEnum):
+    """Descriptive camera observations. None of them is a clinical finding."""
+
+    PERSON_PRESENT = "person_present"
+    PERSON_ABSENT = "person_absent"
+    POSTURE_TRANSITION = "posture_transition"
+    SIGNIFICANT_MOTION = "significant_motion"
+    POSSIBLE_FALL_LIKE_MOTION = "possible_fall_like_motion"
+
+
+class VisionSessionStatus(StrEnum):
+    ACTIVE = "active"
+    STOPPED = "stopped"
 
 
 class WorkflowStatus(StrEnum):
@@ -57,6 +73,7 @@ class AlertType(StrEnum):
     PATIENT_REPORT = "PATIENT_REPORT"
     DATA_STALE = "DATA_STALE"
     DATA_QUALITY = "DATA_QUALITY"
+    CAMERA_OBSERVATION = "CAMERA_OBSERVATION"
 
 
 class AlertStatus(StrEnum):

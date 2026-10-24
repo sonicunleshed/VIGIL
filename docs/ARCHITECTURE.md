@@ -147,17 +147,35 @@ scores alerts against scenario labels (definitions in docs/EVALUATION.md). `serv
 `detector_runs` under a deterministic `run_id`. The web **Insights & Replay** screen shows only
 readings *delivered* by the scrubber time, so the chart shows what each detector could see.
 
-## VIGIL Vision (apps/web, Phase C: browser only)
+## VIGIL Vision
 
-- `lib/vision/useCamera.ts`: camera starts only from a click after the consent box is ticked.
-  All tracks are stopped on Stop, unmount, tab hidden, page hide and device loss. Denied,
+**Browser** (`apps/web/src/lib/vision/`)
+- `useCamera.ts`: the camera starts only from a click after the consent box is ticked. All
+  tracks are stopped on Stop, unmount, tab hidden, page hide and device loss. Denied,
   unavailable and disconnected states are explicit.
-- `lib/vision/usePoseTracker.ts`: loads MediaPipe Pose Landmarker (lite) from `public/` once,
-  GPU with CPU fallback. Inference runs about 10 FPS on a cancellable rAF loop. `numPoses: 2` is
-  used only so tracking can pause when two people are visible.
-- `lib/vision/classifier.ts`: pure heuristics over landmarks with hold times, hysteresis and
-  cooldowns. Events: `person_present`, `person_absent`, `posture_transition`,
-  `significant_motion` and experimental `possible_fall_like_motion` ("verify visually"). Tracking
-  pauses when more than one person is visible or key landmarks are poorly visible.
-- No video, frames or events leave the browser in Phase C (tested). Session binding to a patient
-  and server ingestion are Phase D.
+- `usePoseTracker.ts`: loads MediaPipe Pose Landmarker (lite) from `public/` once, GPU with CPU
+  fallback. Inference runs about 10 FPS on a cancellable rAF loop. `numPoses: 2` is used only so
+  tracking can pause when two people are visible.
+- `classifier.ts`: pure heuristics with hold times, hysteresis and cooldowns. Events:
+  `person_present`, `person_absent`, `posture_transition`, `significant_motion` and experimental
+  `possible_fall_like_motion` ("verify visually").
+- `useVisionSession.ts` + `forwarder.ts`: events are sent only while staff have chosen a patient
+  and switched on "Send to timeline". They go one at a time, in order, with backoff on network
+  errors. The queue is bounded, and each event's fate (on timeline / not sent / dropped) shows in
+  the log. Changing the patient or stopping the camera stops the session.
+
+**Server** (`services/api/app/services/vision.py`, `app/api/vision.py`)
+- `vision_sessions`: manual patient binding with a random token (only its SHA-256 is stored). A
+  new binding for the same patient stops the previous one. Sessions start and stop in the audit
+  log.
+- `vision_events`: structured events only, sharing the `events` envelope, so retries are
+  idempotent on `event_id`. The patient always comes from the session. The browser may echo
+  `patient_id`, but a mismatch is rejected. Also enforced: enum event types, `extra=forbid` (no
+  image fields), at most 12 primitive features, a 4 KB body limit, ±10 min capture-time skew and
+  60 events/min per session.
+- Events are stamped at the simulation clock on arrival (never backdated); `captured_at`,
+  `session_id` and `model_version` are kept as provenance and shown on the timeline.
+- Review policy (`DetectorConfig.vision_review_policy`): by default only
+  `possible_fall_like_motion` opens a `CAMERA_OBSERVATION` review request (prompt review,
+  10 min cooldown). Everything else is timeline-only. Camera events never feed vital-sign
+  detection, staleness or ESI.

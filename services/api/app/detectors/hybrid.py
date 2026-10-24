@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from app.detectors.config import DetectorConfig
-from app.detectors.history import ObsPoint, PatientHistory, ReportPoint
+from app.detectors.history import ObsPoint, PatientHistory, ReportPoint, VisionPoint
 from app.detectors.rules import (
     SHORT,
     TrendFinding,
@@ -30,6 +30,14 @@ from app.detectors.rules import (
 )
 from app.detectors.types import Candidate, Trigger
 from app.domain import AlertType, ObservationKind, WorkflowUrgency
+
+VISION_LABEL = {
+    "person_present": "person in view",
+    "person_absent": "person left view",
+    "posture_transition": "posture change",
+    "significant_motion": "significant movement",
+    "possible_fall_like_motion": "possible fall-like movement",
+}
 
 
 class HybridDetector:
@@ -44,6 +52,10 @@ class HybridDetector:
             report = self._report(history, trigger, now, config)
             if report:
                 out.append(report)
+        elif isinstance(trigger, VisionPoint):
+            camera = self._vision(history, trigger, now, config)
+            if camera:
+                out.append(camera)
         elif isinstance(trigger, ObsPoint):
             if not trigger.good or trigger.out_of_order:
                 out.append(self._quality(history, trigger, now, config))
@@ -206,6 +218,35 @@ class HybridDetector:
             rules=[rule],
             limitations=["About data reliability only; says nothing about the patient's state."],
             cooldown_minutes=config.quality_cooldown_minutes,
+        )
+
+    def _vision(
+        self, history: PatientHistory, v: VisionPoint, now: datetime, config: DetectorConfig
+    ) -> Candidate | None:
+        urgency = config.vision_review_policy.get(v.event_type)
+        if urgency is None:
+            return None  # timeline only
+        label = VISION_LABEL.get(v.event_type, v.event_type.replace("_", " "))
+        return Candidate(
+            patient_id=history.patient_id,
+            detector=self.name,
+            detector_version=self.version,
+            type=AlertType.CAMERA_OBSERVATION,
+            urgency=WorkflowUrgency(urgency),
+            summary=(
+                f"Camera observation: {label} "
+                f"(model score {v.confidence:.2f}, uncalibrated). Verify visually."
+            ),
+            family=f"vision:{v.event_type}",
+            created_at=now,
+            event_ids=[v.id],
+            rules=[f"Camera review policy: {v.event_type} → {urgency.replace('_', ' ')}"],
+            limitations=[
+                "Camera model score is uncalibrated and is not a risk estimate.",
+                "Patient association was set manually by staff for this camera session.",
+                "Lighting, occlusion and camera angle can cause false detections.",
+            ],
+            cooldown_minutes=config.vision_cooldown_minutes,
         )
 
     @staticmethod

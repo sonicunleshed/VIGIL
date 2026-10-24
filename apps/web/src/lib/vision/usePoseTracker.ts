@@ -80,19 +80,24 @@ export function usePoseTracker({
   canvasRef,
   active,
   overlay,
+  onEvents,
 }: {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   active: boolean;
   overlay: boolean;
+  /** Called with each frame's new events (e.g. to forward them to the server). */
+  onEvents?: (events: VisionEvent[]) => void;
 }) {
   const [model, setModel] = useState<ModelState>({ status: "not_loaded" });
   const [stats, setStats] = useState<TrackerStats>({ fps: 0, status: "waiting", posture: "unknown", motion: 0, people: 0 });
   const [events, setEvents] = useState<VisionEvent[]>([]);
   const overlayRef = useRef(overlay);
+  const onEventsRef = useRef(onEvents);
   useEffect(() => {
     overlayRef.current = overlay;
-  }, [overlay]);
+    onEventsRef.current = onEvents;
+  }, [overlay, onEvents]);
 
   useEffect(() => {
     if (!active) return;
@@ -121,6 +126,7 @@ export function usePoseTracker({
           const poses = result.landmarks as Landmark[][];
           const out = classifier.push({ t: Date.now(), poses });
           if (out.events.length) {
+            onEventsRef.current?.(out.events);
             setEvents((prev) => [...out.events.slice().reverse(), ...prev].slice(0, MAX_EVENTS));
           }
           frameTimes.push(now);

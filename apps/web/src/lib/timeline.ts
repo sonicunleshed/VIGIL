@@ -1,11 +1,13 @@
 import type { TimelineOut } from "@vigil/contracts";
 import { ALERT_TYPE_LABEL } from "@/lib/monitoring";
+import { formatClock } from "@/lib/format";
+import { EVENT_LABEL, type VisionEventType } from "@/lib/vision/classifier";
 import { VITAL_BY_KIND } from "@/lib/vitals";
 
 export type TimelineEntry = {
   key: string;
   at: string;
-  kind: "triage" | "observations" | "symptom" | "alert" | "action";
+  kind: "triage" | "observations" | "symptom" | "alert" | "action" | "camera";
   title: string;
   detail: string;
   flags: string[];
@@ -62,6 +64,20 @@ export function buildTimelineEntries(timeline: TimelineOut): TimelineEntry[] {
         title: `Alert: ${ALERT_TYPE_LABEL[a.type] ?? a.type}`,
         detail: a.summary,
         flags: [`${a.detector} v${a.detector_version}`],
+      });
+    } else if (item.item_type === "vision_observation") {
+      const v = item.vision;
+      const f = v.features as Record<string, unknown>;
+      const what = v.event_type === "posture_transition" && f.from && f.to ? `${String(f.from)} → ${String(f.to)}` : "";
+      entries.push({
+        key: `vision-${v.id}`,
+        at: v.observed_at,
+        kind: "camera",
+        title: `Camera observation: ${EVENT_LABEL[v.event_type as VisionEventType] ?? v.event_type}`,
+        detail: [what, `captured ${formatClock(v.captured_at, true)} (device clock)`, `score ${v.confidence_score.toFixed(2)}, uncalibrated`]
+          .filter(Boolean)
+          .join(" · "),
+        flags: [`session ${v.session_id.slice(0, 8)}`, v.model_version],
       });
     } else {
       const act = item.action;

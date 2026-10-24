@@ -11,6 +11,15 @@ vi.mock("@/lib/vision/usePoseTracker", () => ({
   }),
 }));
 
+vi.mock("@/lib/store", () => ({
+  useVigil: () => ({
+    patients: [
+      { id: "P003", display_code: "WR-03", complaint: "nausea" },
+      { id: "P004", display_code: "WR-04", complaint: "headache" },
+    ],
+  }),
+}));
+
 import { VisionView } from "@/components/vision/VisionView";
 
 type FakeTrack = { stop: ReturnType<typeof vi.fn>; onended: (() => void) | null; label: string; getSettings: () => { deviceId: string } };
@@ -131,5 +140,54 @@ describe("VIGIL Vision camera lifecycle", () => {
   it("makes no network calls (Phase C keeps everything in the browser)", async () => {
     await startLive();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("needs a live camera and a staff-chosen patient before anything can be sent", async () => {
+    await startLive();
+    const send = screen.getByRole("button", { name: /send to timeline/i });
+    expect(send).toHaveProperty("disabled", true);
+    fireEvent.change(screen.getByLabelText(/patient on camera/i), { target: { value: "P003" } });
+    expect(screen.getByRole("button", { name: /send to timeline/i })).toHaveProperty("disabled", false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("binds a session on Send and stops it when the camera stops", async () => {
+    fetchSpy.mockImplementation(async (url: string) => {
+      const body = url.endsWith("/stop")
+        ? { id: "s1", status: "stopped" }
+        : { id: "s1-0000-0000", patient_id: "P003", token: "tok", status: "active" };
+      return new Response(JSON.stringify(body), { status: url.endsWith("/stop") ? 200 : 201 });
+    });
+    await startLive();
+    fireEvent.change(screen.getByLabelText(/patient on camera/i), { target: { value: "P003" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /send to timeline/i }));
+    });
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/api\/vision\/sessions$/);
+    expect(JSON.parse(String(init.body))).toMatchObject({ patient_id: "P003", consent_acknowledged: true });
+    expect(screen.getByText(/observations go to WR-03/)).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /stop camera/i }));
+    });
+    const stopCall = fetchSpy.mock.calls.find(([u]) => String(u).endsWith("/stop")) as [string, RequestInit];
+    expect(stopCall).toBeTruthy();
+    expect((stopCall[1].headers as Record<string, string>)["X-Vision-Token"]).toBe("tok");
+  });
+
+  it("changing the patient turns sending off until staff re-enable it", async () => {
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify({ id: "s1-0000-0000", patient_id: "P003", token: "tok", status: "active" }), { status: 201 }),
+    );
+    await startLive();
+    fireEvent.change(screen.getByLabelText(/patient on camera/i), { target: { value: "P003" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /send to timeline/i }));
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/patient on camera/i), { target: { value: "P004" } });
+    });
+    expect(screen.getByRole("button", { name: /send to timeline/i })).toBeTruthy();
+    expect(screen.getByText("Observations stay in this browser")).toBeTruthy();
   });
 });

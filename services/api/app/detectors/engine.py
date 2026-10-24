@@ -14,11 +14,11 @@ from sqlalchemy.orm import Session
 
 from app.detectors.config import DEFAULT_CONFIG, DetectorConfig
 from app.detectors.dedup import should_emit
-from app.detectors.history import ObsPoint, PatientHistory, ReportPoint
+from app.detectors.history import ObsPoint, PatientHistory, ReportPoint, VisionPoint
 from app.detectors.hybrid import HybridDetector
 from app.detectors.types import Candidate, Trigger
 from app.domain import ObservationKind
-from app.models import Alert, Event, Observation, Patient, SymptomReport
+from app.models import Alert, Event, Observation, Patient, SymptomReport, VisionEvent
 from app.services import alerts as alert_service
 from app.services.ingest import IngestOutcome
 
@@ -57,6 +57,18 @@ def load_history(db: Session, patient_id: str) -> PatientHistory:
                 free_text=r.free_text,
                 tags=tuple(r.structured_tags),
                 urgent_help_requested=r.urgent_help_requested,
+            )
+        )
+    for v in db.scalars(select(VisionEvent).where(VisionEvent.patient_id == patient_id)):
+        history.vision.append(
+            VisionPoint(
+                id=v.id,
+                event_type=v.event_type,
+                observed_at=v.observed_at,
+                captured_at=v.captured_at,
+                confidence=v.confidence_score,
+                session_id=v.session_id,
+                model_version=v.model_version,
             )
         )
     return history
@@ -111,10 +123,13 @@ def process(
         return []
     history = load_history(db, outcome.event.patient_id)
     trigger: Trigger = None
+    rid = outcome.record.id
     if isinstance(outcome.record, Observation):
-        trigger = next((o for o in history.observations if o.id == outcome.record.id), None)
+        trigger = next((o for o in history.observations if o.id == rid), None)
+    elif isinstance(outcome.record, VisionEvent):
+        trigger = next((v for v in history.vision if v.id == rid), None)
     else:
-        trigger = next((r for r in history.reports if r.id == outcome.record.id), None)
+        trigger = next((r for r in history.reports if r.id == rid), None)
     return _emit(db, LIVE_DETECTOR.evaluate(history, now, trigger, config), config)
 
 

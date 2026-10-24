@@ -38,6 +38,19 @@ class ReportPoint:
     urgent_help_requested: bool
 
 
+@dataclass(frozen=True)
+class VisionPoint:
+    """A camera observation. Descriptive only; never used for vital-sign change detection."""
+
+    id: str
+    event_type: str
+    observed_at: datetime
+    captured_at: datetime
+    confidence: float
+    session_id: str
+    model_version: str
+
+
 @dataclass
 class PatientHistory:
     """Everything received so far for one patient. Missing values are simply absent."""
@@ -46,6 +59,7 @@ class PatientHistory:
     arrival_at: datetime
     observations: list[ObsPoint] = field(default_factory=list)
     reports: list[ReportPoint] = field(default_factory=list)
+    vision: list[VisionPoint] = field(default_factory=list)
 
     def series(self, kind: ObservationKind, good_only: bool) -> list[ObsPoint]:
         pts = [o for o in self.observations if o.kind == kind and (o.good or not good_only)]

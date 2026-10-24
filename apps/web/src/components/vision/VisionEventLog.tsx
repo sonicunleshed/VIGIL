@@ -1,4 +1,5 @@
 import { Activity, ArrowRightLeft, FlaskConical, LogIn, LogOut, ScrollText } from "lucide-react";
+import type { ForwardInfo } from "@/lib/vision/useVisionSession";
 import type { LucideIcon } from "lucide-react";
 import { Button, EmptyState } from "@/components/ui/primitives";
 import { formatClock } from "@/lib/format";
@@ -28,13 +29,29 @@ function detail(e: VisionEvent): string {
   }
 }
 
-export function VisionEventLog({ events, onClear }: { events: VisionEvent[]; onClear: () => void }) {
+const FORWARD_TEXT: Record<string, { text: string; cls: string }> = {
+  queued: { text: "queued", cls: "text-fg-3" },
+  sending: { text: "sending…", cls: "text-fg-3" },
+  sent: { text: "on timeline", cls: "text-st-monitoring" },
+  failed: { text: "not sent", cls: "text-st-urgent" },
+  dropped: { text: "dropped", cls: "text-st-urgent" },
+};
+
+export function VisionEventLog({
+  events,
+  forwarded,
+  onClear,
+}: {
+  events: VisionEvent[];
+  forwarded: Record<string, ForwardInfo>;
+  onClear: () => void;
+}) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <div>
           <h2 className="text-sm font-semibold text-fg">Camera observations</h2>
-          <p className="text-xs text-fg-3">Kept in this browser only · newest first</p>
+          <p className="text-xs text-fg-3">Newest first · sent only while linked to a patient</p>
         </div>
         {events.length > 0 && (
           <Button size="sm" variant="ghost" onClick={onClear}>
@@ -62,6 +79,17 @@ export function VisionEventLog({ events, onClear }: { events: VisionEvent[]; onC
                   <p className="tabular text-xs text-fg-3">
                     {[detail(e), `score ${e.confidence.toFixed(2)} (uncalibrated)`].filter(Boolean).join(" · ")}
                   </p>
+                  {forwarded[e.id] ? (
+                    <p
+                      className={`text-[11px] ${FORWARD_TEXT[forwarded[e.id].status].cls}`}
+                      title={forwarded[e.id].message}
+                    >
+                      {FORWARD_TEXT[forwarded[e.id].status].text}
+                      {forwarded[e.id].message ? ` · ${forwarded[e.id].message}` : ""}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-fg-3">local only</p>
+                  )}
                 </div>
               </li>
             );

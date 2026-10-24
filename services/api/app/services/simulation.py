@@ -27,6 +27,8 @@ from app.models import (
     ScenarioDelivery,
     SimulationState,
     SymptomReport,
+    VisionEvent,
+    VisionSession,
 )
 from app.schemas.inputs import ObservationIn, ScenarioEnvelope, SymptomReportIn
 from app.schemas.outputs import SimulationStateOut
@@ -110,6 +112,8 @@ def _wipe(db: Session) -> None:
         Alert,
         Observation,
         SymptomReport,
+        VisionEvent,
+        VisionSession,
         Event,
         Patient,
         SimulationState,

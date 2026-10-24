@@ -14,6 +14,8 @@ from app.domain import (
     ObservationKind,
     ObservationQuality,
     SimulationStatus,
+    VisionEventType,
+    VisionSessionStatus,
     WorkflowStatus,
     WorkflowUrgency,
 )
@@ -162,7 +164,59 @@ class TimelineAlertAction(_Out):
     action: AlertActionOut
 
 
-TimelineItem = TimelineObservation | TimelineSymptomReport | TimelineAlert | TimelineAlertAction
+class VisionEventOut(_Out):
+    id: str
+    session_id: str
+    patient_id: str
+    event_type: VisionEventType
+    observed_at: datetime = Field(description="Simulation clock when VIGIL received it.")
+    captured_at: datetime = Field(description="Browser wall-clock capture time (provenance).")
+    received_at: datetime
+    confidence_score: float
+    confidence_meaning: str
+    features: dict[str, Any]
+    model_version: str
+    source: Literal["vision_local"] = "vision_local"
+
+
+class TimelineVisionObservation(_Out):
+    item_type: Literal["vision_observation"] = "vision_observation"
+    at: datetime
+    vision: VisionEventOut
+
+
+TimelineItem = (
+    TimelineObservation
+    | TimelineSymptomReport
+    | TimelineAlert
+    | TimelineAlertAction
+    | TimelineVisionObservation
+)
+
+
+class VisionSessionOut(_Out):
+    id: str
+    patient_id: str
+    status: VisionSessionStatus
+    consent_acknowledged: bool
+    device_label: str | None
+    model_version: str
+    started_by: str
+    started_at: datetime
+    started_wall_at: datetime
+    stopped_at: datetime | None
+    stop_reason: str | None
+
+
+class VisionSessionCreatedOut(VisionSessionOut):
+    token: str = Field(description="Shown once. Send as the X-Vision-Token header.")
+
+
+class VisionIngestResult(_Out):
+    status: Literal["created", "duplicate"]
+    event_id: str
+    vision_event: VisionEventOut
+    alerts: list[AlertOut] = Field(description="Review requests this event opened, if any.")
 
 
 class TimelineOut(_Out):

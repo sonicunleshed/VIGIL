@@ -91,6 +91,9 @@ docs/                  Architecture, safety, evaluation, demo
 | GET | `/api/replay/catalog?seed=` | Patients and scenario labels for a seed |
 | POST | `/api/replay/compare` | One patient's trajectory through all three detectors |
 | GET | `/api/evaluation?seeds=1,2,3` | Metrics with denominators; recorded in `detector_runs` |
+| POST | `/api/vision/sessions` | Staff bind a camera to a patient; returns a one-time token |
+| POST | `/api/vision/events` | Structured camera event (`X-Vision-Token`); no images accepted |
+| POST | `/api/vision/sessions/{id}/stop` · GET `…/events` · GET `/api/vision/sessions` | |
 
 Interactive docs: http://localhost:8000/docs. See [docs/EVALUATION.md](docs/EVALUATION.md) for definitions and a held-out snapshot.
 

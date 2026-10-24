@@ -66,6 +66,12 @@ class DetectorConfig:
         {"breathing_harder", "chest_discomfort", "new_confusion", "feeling_faint", "bleeding"}
     )
     non_alerting_report_tags: frozenset[str] = frozenset({"feeling_better"})
+    # Camera event type -> workflow urgency of the review request it opens. Types not listed
+    # appear on the timeline only. Camera events never change ESI or vital-sign detection.
+    vision_review_policy: dict[str, str] = field(
+        default_factory=lambda: {"possible_fall_like_motion": "prompt_review"}
+    )
+    vision_cooldown_minutes: int = 10
 
     def config_hash(self) -> str:
         def default(o: object) -> object:

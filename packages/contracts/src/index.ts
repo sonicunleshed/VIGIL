@@ -32,6 +32,12 @@ export type ReplayObservationOut = Schemas["ReplayObservationOut"];
 export type EvaluationOut = Schemas["EvaluationOut"];
 export type DetectorMetricsOut = Schemas["DetectorMetricsOut"];
 export type ArchetypeRowOut = Schemas["ArchetypeRowOut"];
+export type VisionSessionIn = Schemas["VisionSessionIn"];
+export type VisionSessionOut = Schemas["VisionSessionOut"];
+export type VisionSessionCreatedOut = Schemas["VisionSessionCreatedOut"];
+export type VisionEventIn = Schemas["VisionEventIn"];
+export type VisionEventOut = Schemas["VisionEventOut"];
+export type VisionIngestResult = Schemas["VisionIngestResult"];
 
 /** Server-sent event names emitted by GET /api/events/stream. */
 export type StreamEventType =
@@ -40,6 +46,8 @@ export type StreamEventType =
   | "symptom_report"
   | "alert_created" // emitted once detectors exist (Phase 3)
   | "alert_updated"
+  | "vision_observation_created"
+  | "vision_session"
   | "simulation"
   | "reset"
   | "resync";

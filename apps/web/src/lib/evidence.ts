@@ -2,7 +2,7 @@
  * Reading alert evidence and summarising observed data limitations. Everything here restates
  * recorded facts (event ids, timestamps, quality flags); nothing infers clinical meaning.
  */
-import type { AlertOut, ObservationOut, PatientDetail, TimelineOut } from "@vigil/contracts";
+import type { AlertOut, ObservationOut, PatientDetail, TimelineOut, VisionEventOut } from "@vigil/contracts";
 
 /**
  * Expected `evidence_json` shape from detectors (see docs/ARCHITECTURE.md). Fields are optional and
@@ -34,6 +34,14 @@ export function observationIndex(timeline: TimelineOut | null): Map<string, Obse
   const map = new Map<string, ObservationOut>();
   for (const item of timeline?.items ?? []) {
     if (item.item_type === "observation") map.set(item.observation.id, item.observation);
+  }
+  return map;
+}
+
+export function visionIndex(timeline: TimelineOut | null): Map<string, VisionEventOut> {
+  const map = new Map<string, VisionEventOut>();
+  for (const item of timeline?.items ?? []) {
+    if (item.item_type === "vision_observation") map.set(item.vision.id, item.vision);
   }
   return map;
 }

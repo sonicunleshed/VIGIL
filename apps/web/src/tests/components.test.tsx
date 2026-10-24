@@ -75,3 +75,40 @@ describe("buildTimelineEntries", () => {
     expect(entries[0].detail).toBe("nurse-demo-1: “seen”");
   });
 });
+
+describe("camera timeline entries", () => {
+  it("shows the observation with its provenance", () => {
+    const timeline: TimelineOut = {
+      patient_id: "P003",
+      as_of: "2026-01-15T14:30:00Z",
+      items: [
+        {
+          item_type: "vision_observation",
+          at: "2026-01-15T14:20:00Z",
+          vision: {
+            id: "v1",
+            session_id: "abcdef12-0000-0000-0000-000000000000",
+            patient_id: "P003",
+            event_type: "posture_transition",
+            observed_at: "2026-01-15T14:20:00Z",
+            captured_at: "2026-10-24T21:32:43Z",
+            received_at: "2026-01-15T14:20:00Z",
+            confidence_score: 0.76,
+            confidence_meaning: "uncalibrated_model_score",
+            features: { from: "seated", to: "standing" },
+            model_version: "pose-landmarker-lite-float16-v1",
+            source: "vision_local",
+          },
+        },
+      ],
+    };
+    const [e] = buildTimelineEntries(timeline);
+    expect(e.kind).toBe("camera");
+    expect(e.title).toBe("Camera observation: Posture change");
+    expect(e.detail).toContain("seated → standing");
+    expect(e.detail).toContain("captured 21:32:43 (device clock)");
+    expect(e.detail).toContain("score 0.76, uncalibrated");
+    expect(e.flags).toEqual(["session abcdef12", "pose-landmarker-lite-float16-v1"]);
+  });
+});
+

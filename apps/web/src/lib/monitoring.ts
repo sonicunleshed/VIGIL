@@ -17,12 +17,12 @@ export const STATUS_ORDER: MonitoringStatus[] = [
 /** The exact mapping shown to users in the status legend. */
 export const STATUS_POLICY: Record<MonitoringStatus, string> = {
   urgent_review: "Has an unresolved alert labelled prompt review",
-  reassessment_due: "Has an unresolved observed-change or patient-report alert",
+  reassessment_due: "Has an unresolved observed-change, patient-report or camera alert",
   information_gap: "Only unresolved stale-data or data-quality alerts",
   monitoring: "No unresolved alerts. This is not a statement that the patient is stable",
 };
 
-const CHANGE_TYPES = new Set(["OBSERVED_CHANGE", "PATIENT_REPORT"]);
+const CHANGE_TYPES = new Set(["OBSERVED_CHANGE", "PATIENT_REPORT", "CAMERA_OBSERVATION"]);
 const DATA_TYPES = new Set(["DATA_STALE", "DATA_QUALITY"]);
 
 export function isUnresolved(alert: AlertOut): boolean {
@@ -67,6 +67,7 @@ export const ALERT_TYPE_LABEL: Record<string, string> = {
   PATIENT_REPORT: "Patient report",
   DATA_STALE: "Stale data",
   DATA_QUALITY: "Data quality",
+  CAMERA_OBSERVATION: "Camera observation",
 };
 
 export const URGENCY_LABEL: Record<string, string> = {

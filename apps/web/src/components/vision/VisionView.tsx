@@ -1,7 +1,9 @@
 "use client";
 
-import { Camera, CameraOff, Cpu, Eye, EyeOff, Lock, Users } from "lucide-react";
+import { Camera, CameraOff, Cpu, Eye, EyeOff, Lock, Send, Users } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { useVigil } from "@/lib/store";
+import { useVisionSession, type SessionState } from "@/lib/vision/useVisionSession";
 import { VisionEventLog } from "@/components/vision/VisionEventLog";
 import { Button, Card } from "@/components/ui/primitives";
 import { useCamera, type CameraStatus } from "@/lib/vision/useCamera";
@@ -57,15 +59,102 @@ function Row({ label, value, tone = "" }: { label: string; value: string; tone?:
   );
 }
 
+function ForwardingControls({
+  selectId,
+  patients,
+  patientId,
+  onPatient,
+  forwarding,
+  canForward,
+  onToggle,
+  state,
+  patientCode,
+}: {
+  selectId: string;
+  patients: { id: string; label: string }[];
+  patientId: string;
+  onPatient: (id: string) => void;
+  forwarding: boolean;
+  canForward: boolean;
+  onToggle: () => void;
+  state: SessionState;
+  patientCode: string | null;
+}) {
+  const status =
+    state.status === "on"
+      ? `Session ${state.session.id.slice(0, 8)} · observations go to ${patientCode}'s timeline`
+      : state.status === "starting"
+        ? "Starting session…"
+        : state.status === "error"
+          ? `Could not start session: ${state.message}`
+          : "Observations stay in this browser";
+  return (
+    <section aria-label="Patient link" className="rounded-xl border border-line bg-surface p-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label htmlFor={selectId} className="flex flex-col gap-1 text-[11px] text-fg-3">
+          Patient on camera (chosen by staff)
+          <select
+            id={selectId}
+            value={patientId}
+            onChange={(e) => onPatient(e.target.value)}
+            className="h-10 min-w-64 rounded-lg border border-line bg-raised px-2 text-sm text-fg"
+          >
+            <option value="">Choose patient…</option>
+            {patients.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button
+          variant={forwarding ? "secondary" : "primary"}
+          icon={Send}
+          aria-pressed={forwarding}
+          disabled={!canForward && !forwarding}
+          onClick={onToggle}
+        >
+          {forwarding ? "Stop sending" : "Send to timeline"}
+        </Button>
+      </div>
+      <p
+        role="status"
+        className={`mt-2 text-xs ${state.status === "error" ? "text-st-urgent" : state.status === "on" ? "text-accent" : "text-fg-3"}`}
+      >
+        {status}
+      </p>
+      {!canForward && !forwarding && (
+        <p className="mt-1 text-[11px] text-fg-3">Start the camera and choose a patient to enable sending.</p>
+      )}
+    </section>
+  );
+}
+
 export function VisionView() {
   const camera = useCamera();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [overlay, setOverlay] = useState(true);
   const [consent, setConsent] = useState(false);
+  const [patientId, setPatientId] = useState("");
+  const [forwarding, setForwarding] = useState(false);
   const consentId = useId();
+  const patientSelectId = useId();
+  const { patients } = useVigil();
   const live = camera.status === "live" && camera.stream !== null;
-  const { model, stats, events, clearEvents } = usePoseTracker({ videoRef, canvasRef, active: live, overlay });
+  const session = useVisionSession({
+    patientId: patientId || null,
+    enabled: forwarding && live,
+    deviceLabel: camera.label,
+  });
+  const { model, stats, events, clearEvents } = usePoseTracker({
+    videoRef,
+    canvasRef,
+    active: live,
+    overlay,
+    onEvents: session.forward,
+  });
+  const patient = patients.find((p) => p.id === patientId) ?? null;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -115,6 +204,15 @@ export function VisionView() {
               <Users aria-hidden className="size-4" /> {tracking.text}
             </p>
           )}
+          {live && session.state.status === "on" && patient && (
+            <p
+              role="status"
+              className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-medium text-accent"
+            >
+              <Send aria-hidden className="size-3.5" />
+              {tracking.warn ? `Sending paused · ${patient.display_code}` : `Sending to ${patient.display_code}`}
+            </p>
+          )}
           <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white/80">
             <Lock aria-hidden className="size-3" /> Local processing
           </span>
@@ -122,7 +220,13 @@ export function VisionView() {
 
         <div className="flex flex-wrap items-center gap-3">
           {live ? (
-            <Button icon={CameraOff} onClick={camera.stop}>
+            <Button
+              icon={CameraOff}
+              onClick={() => {
+                setForwarding(false);
+                camera.stop();
+              }}
+            >
               Stop camera
             </Button>
           ) : (
@@ -155,6 +259,20 @@ export function VisionView() {
             Pose overlay {overlay ? "on" : "off"}
           </Button>
         </div>
+        <ForwardingControls
+          selectId={patientSelectId}
+          patients={patients.map((p) => ({ id: p.id, label: `${p.display_code} · ${p.complaint}` }))}
+          patientId={patientId}
+          onPatient={(id) => {
+            setForwarding(false); // re-binding is always an explicit step
+            setPatientId(id);
+          }}
+          forwarding={forwarding}
+          canForward={live && patientId !== ""}
+          onToggle={() => setForwarding((f) => !f)}
+          state={session.state}
+          patientCode={patient?.display_code ?? null}
+        />
         {!live && (
           <label htmlFor={consentId} className="flex max-w-xl items-start gap-2.5 text-sm text-fg-2">
             <input
@@ -190,12 +308,12 @@ export function VisionView() {
             </p>
           )}
           <p className="flex items-center gap-1.5 border-t border-line px-5 py-3 text-[11px] text-fg-3">
-            <Cpu aria-hidden className="size-3" /> {MODEL_VERSION}, running on this device. Only
-            descriptive movement events are produced; nothing is sent to the server.
+            <Cpu aria-hidden className="size-3" /> {MODEL_VERSION}, running on this device. Video
+            never leaves it; only structured movement events are sent, and only while linked to a patient.
           </p>
         </Card>
         <Card as="div" aria-label="Camera observations">
-          <VisionEventLog events={events} onClear={clearEvents} />
+          <VisionEventLog events={events} forwarded={session.forwarded} onClear={clearEvents} />
         </Card>
       </div>
     </div>

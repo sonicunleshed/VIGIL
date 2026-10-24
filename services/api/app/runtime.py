@@ -12,11 +12,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import Settings
 from app.db import write_lock
 from app.domain import SimulationStatus
-from app.models import Observation, SymptomReport
-from app.schemas.outputs import ObservationOut, SymptomReportOut
+from app.models import Observation, SymptomReport, VisionEvent
+from app.schemas.outputs import ObservationOut, SymptomReportOut, VisionEventOut
 from app.services import queries, simulation
 from app.services.broker import Broker
 from app.services.simulation import AdvanceResult
+from app.services.vision import RateLimiter
 
 log = logging.getLogger("vigil.runtime")
 
@@ -26,6 +27,7 @@ class Runtime:
         self.settings = settings
         self.session_factory = session_factory
         self.broker = Broker()
+        self.vision_limiter = RateLimiter()
         self._task: asyncio.Task[None] | None = None
 
     # -- publishing -------------------------------------------------------
@@ -41,6 +43,11 @@ class Runtime:
                         "out_of_order": outcome.event.out_of_order,
                         "observation": ObservationOut.model_validate(rec).model_dump(mode="json"),
                     },
+                )
+            elif isinstance(rec, VisionEvent):
+                self.broker.publish(
+                    "vision_observation_created",
+                    {"vision": VisionEventOut.model_validate(rec).model_dump(mode="json")},
                 )
             elif isinstance(rec, SymptomReport):
                 self.broker.publish(

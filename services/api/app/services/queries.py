@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.domain import AlertStatus, ObservationKind, ObservationQuality, WorkflowStatus
 from app.errors import NotFound
-from app.models import Alert, AlertAction, Event, Observation, Patient, SymptomReport
+from app.models import Alert, AlertAction, Event, Observation, Patient, SymptomReport, VisionEvent
 from app.schemas.outputs import (
     AlertActionOut,
     AlertOut,
@@ -24,6 +24,8 @@ from app.schemas.outputs import (
     TimelineItem,
     TimelineObservation,
     TimelineSymptomReport,
+    TimelineVisionObservation,
+    VisionEventOut,
 )
 
 
@@ -169,5 +171,16 @@ def timeline(db: Session, patient_id: str) -> list[TimelineItem]:
                     ),
                 )
             )
+    for v in db.scalars(select(VisionEvent).where(VisionEvent.patient_id == patient_id)):
+        keyed.append(
+            (
+                v.observed_at,
+                # Camera events stamped at the same (paused) clock fall back to capture order.
+                f"{v.captured_at.isoformat()}:{v.id}",
+                TimelineVisionObservation(
+                    at=v.observed_at, vision=VisionEventOut.model_validate(v)
+                ),
+            )
+        )
     keyed.sort(key=lambda k: (k[0], k[1]))
     return [item for _, _, item in keyed]

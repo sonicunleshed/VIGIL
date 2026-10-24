@@ -2,7 +2,7 @@
 
 import type { TimelineOut } from "@vigil/contracts";
 import type { LucideIcon } from "lucide-react";
-import { Bell, CheckCheck, ClipboardList, MessageSquareText, Stethoscope } from "lucide-react";
+import { Bell, CheckCheck, ClipboardList, MessageSquareText, ScanEye, Stethoscope } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, Card, CardHeader } from "@/components/ui/primitives";
 import { formatClock } from "@/lib/format";
@@ -14,6 +14,7 @@ const KIND_STYLE: Record<TimelineEntry["kind"], { icon: LucideIcon; cls: string 
   symptom: { icon: MessageSquareText, cls: "text-st-info" },
   alert: { icon: Bell, cls: "text-st-due" },
   action: { icon: CheckCheck, cls: "text-st-monitoring" },
+  camera: { icon: ScanEye, cls: "text-st-gap" },
 };
 
 const INITIAL = 10;

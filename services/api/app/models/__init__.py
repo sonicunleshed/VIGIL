@@ -122,6 +122,45 @@ class SymptomReport(Base):
     source: Mapped[str] = mapped_column(String(64))
 
 
+class VisionSession(Base):
+    """A camera session manually bound to one patient by staff. Never identity recognition."""
+
+    __tablename__ = "vision_sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16))
+    consent_acknowledged: Mapped[bool] = mapped_column(Boolean)
+    device_label: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    model_version: Mapped[str] = mapped_column(String(64))
+    started_by: Mapped[str] = mapped_column(String(40))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime)  # simulation clock
+    started_wall_at: Mapped[datetime] = mapped_column(UTCDateTime)  # provenance only
+    stopped_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    stop_reason: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+
+class VisionEvent(Base):
+    """Structured camera observation. No images or video are ever stored."""
+
+    __tablename__ = "vision_events"
+
+    id: Mapped[str] = mapped_column(ForeignKey("events.event_id"), primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("vision_sessions.id", ondelete="CASCADE"))
+    patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    event_type: Mapped[str] = mapped_column(String(40))
+    observed_at: Mapped[datetime] = mapped_column(UTCDateTime)  # simulation clock at ingest
+    captured_at: Mapped[datetime] = mapped_column(UTCDateTime)  # browser wall clock (provenance)
+    received_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    confidence_score: Mapped[float] = mapped_column(Float)
+    confidence_meaning: Mapped[str] = mapped_column(String(40))
+    features: Mapped[dict[str, Any]] = mapped_column(JSON)
+    model_version: Mapped[str] = mapped_column(String(64))
+
+    __table_args__ = (Index("ix_vision_events_patient_time", "patient_id", "observed_at"),)
+
+
 class Alert(Base):
     __tablename__ = "alerts"
 

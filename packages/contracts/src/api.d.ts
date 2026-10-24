@@ -327,6 +327,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vision/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Event */
+        post: operations["post_event_api_vision_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vision/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sessions */
+        get: operations["list_sessions_api_vision_sessions_get"];
+        put?: never;
+        /** Create Session */
+        post: operations["create_session_api_vision_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vision/sessions/{session_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session Events */
+        get: operations["session_events_api_vision_sessions__session_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vision/sessions/{session_id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop Session */
+        post: operations["stop_session_api_vision_sessions__session_id__stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -422,7 +491,7 @@ export interface components {
          * AlertType
          * @enum {string}
          */
-        AlertType: "OBSERVED_CHANGE" | "PATIENT_REPORT" | "DATA_STALE" | "DATA_QUALITY";
+        AlertType: "OBSERVED_CHANGE" | "PATIENT_REPORT" | "DATA_STALE" | "DATA_QUALITY" | "CAMERA_OBSERVATION";
         /** AlertsOut */
         AlertsOut: {
             /** Alerts */
@@ -1187,7 +1256,7 @@ export interface components {
              * Items
              * @description Sorted by `at`, then id, ascending.
              */
-            items: (components["schemas"]["TimelineObservation"] | components["schemas"]["TimelineSymptomReport"] | components["schemas"]["TimelineAlert"] | components["schemas"]["TimelineAlertAction"])[];
+            items: (components["schemas"]["TimelineObservation"] | components["schemas"]["TimelineSymptomReport"] | components["schemas"]["TimelineAlert"] | components["schemas"]["TimelineAlertAction"] | components["schemas"]["TimelineVisionObservation"])[];
             /** Patient Id */
             patient_id: string;
         };
@@ -1206,6 +1275,21 @@ export interface components {
             item_type: "symptom_report";
             symptom_report: components["schemas"]["SymptomReportOut"];
         };
+        /** TimelineVisionObservation */
+        TimelineVisionObservation: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Item Type
+             * @default vision_observation
+             * @constant
+             */
+            item_type: "vision_observation";
+            vision: components["schemas"]["VisionEventOut"];
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1218,6 +1302,210 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * VisionEventIn
+         * @description One structured camera observation. Images and video are never accepted.
+         */
+        VisionEventIn: {
+            /**
+             * Captured At
+             * Format: date-time
+             * @description Browser wall-clock capture time (provenance).
+             */
+            captured_at: string;
+            /**
+             * Confidence Meaning
+             * @default uncalibrated_model_score
+             * @constant
+             */
+            confidence_meaning: "uncalibrated_model_score";
+            /** Confidence Score */
+            confidence_score: number;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            event_type: components["schemas"]["VisionEventType"];
+            /** Features */
+            features?: {
+                [key: string]: boolean | number | string;
+            };
+            /** Model Version */
+            model_version: string;
+            /**
+             * Patient Id
+             * @description Optional echo; must match the session's patient.
+             */
+            patient_id?: string | null;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+        };
+        /** VisionEventOut */
+        VisionEventOut: {
+            /**
+             * Captured At
+             * Format: date-time
+             * @description Browser wall-clock capture time (provenance).
+             */
+            captured_at: string;
+            /** Confidence Meaning */
+            confidence_meaning: string;
+            /** Confidence Score */
+            confidence_score: number;
+            event_type: components["schemas"]["VisionEventType"];
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: string;
+            /** Model Version */
+            model_version: string;
+            /**
+             * Observed At
+             * Format: date-time
+             * @description Simulation clock when VIGIL received it.
+             */
+            observed_at: string;
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Session Id */
+            session_id: string;
+            /**
+             * Source
+             * @default vision_local
+             * @constant
+             */
+            source: "vision_local";
+        };
+        /**
+         * VisionEventType
+         * @description Descriptive camera observations. None of them is a clinical finding.
+         * @enum {string}
+         */
+        VisionEventType: "person_present" | "person_absent" | "posture_transition" | "significant_motion" | "possible_fall_like_motion";
+        /** VisionIngestResult */
+        VisionIngestResult: {
+            /**
+             * Alerts
+             * @description Review requests this event opened, if any.
+             */
+            alerts: components["schemas"]["AlertOut"][];
+            /** Event Id */
+            event_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "created" | "duplicate";
+            vision_event: components["schemas"]["VisionEventOut"];
+        };
+        /** VisionSessionCreatedOut */
+        VisionSessionCreatedOut: {
+            /** Consent Acknowledged */
+            consent_acknowledged: boolean;
+            /** Device Label */
+            device_label: string | null;
+            /** Id */
+            id: string;
+            /** Model Version */
+            model_version: string;
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started Wall At
+             * Format: date-time
+             */
+            started_wall_at: string;
+            status: components["schemas"]["VisionSessionStatus"];
+            /** Stop Reason */
+            stop_reason: string | null;
+            /** Stopped At */
+            stopped_at: string | null;
+            /**
+             * Token
+             * @description Shown once. Send as the X-Vision-Token header.
+             */
+            token: string;
+        };
+        /**
+         * VisionSessionIn
+         * @description Staff manually bind a camera session to one patient. VIGIL never infers identity.
+         */
+        VisionSessionIn: {
+            /** Actor Id */
+            actor_id: string;
+            /** Consent Acknowledged */
+            consent_acknowledged: boolean;
+            /** Device Label */
+            device_label?: string | null;
+            /** Model Version */
+            model_version: string;
+            /** Patient Id */
+            patient_id: string;
+        };
+        /** VisionSessionOut */
+        VisionSessionOut: {
+            /** Consent Acknowledged */
+            consent_acknowledged: boolean;
+            /** Device Label */
+            device_label: string | null;
+            /** Id */
+            id: string;
+            /** Model Version */
+            model_version: string;
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started Wall At
+             * Format: date-time
+             */
+            started_wall_at: string;
+            status: components["schemas"]["VisionSessionStatus"];
+            /** Stop Reason */
+            stop_reason: string | null;
+            /** Stopped At */
+            stopped_at: string | null;
+        };
+        /**
+         * VisionSessionStatus
+         * @enum {string}
+         */
+        VisionSessionStatus: "active" | "stopped";
+        /** VisionStopIn */
+        VisionStopIn: {
+            /** Reason */
+            reason?: string | null;
         };
         /**
          * WorkflowStatus
@@ -1929,6 +2217,235 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    post_event_api_vision_events_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Vision-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisionEventIn"];
+            };
+        };
+        responses: {
+            /** @description Duplicate delivery (idempotent no-op) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisionIngestResult"];
+                };
+            };
+            /** @description Invalid session token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session stopped, or event_id reused with a different payload */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Body too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed (schema, patient/session mismatch, clock skew) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many events for this session */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_sessions_api_vision_sessions_get: {
+        parameters: {
+            query?: {
+                patient_id?: string | null;
+                active?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisionSessionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_session_api_vision_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisionSessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisionSessionCreatedOut"];
+                };
+            };
+            /** @description Unknown demo actor */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown patient */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    session_events_api_vision_sessions__session_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisionEventOut"][];
+                };
+            };
+            /** @description Unknown session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_session_api_vision_sessions__session_id__stop_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Vision-Token"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["VisionStopIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisionSessionOut"];
+                };
+            };
+            /** @description Invalid session token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

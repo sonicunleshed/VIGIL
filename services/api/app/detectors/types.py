@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from app.detectors.config import DetectorConfig
-from app.detectors.history import ObsPoint, PatientHistory, ReportPoint
+from app.detectors.history import ObsPoint, PatientHistory, ReportPoint, VisionPoint
 from app.domain import AlertType, WorkflowUrgency
 
 
@@ -40,7 +40,7 @@ class Candidate:
         return ev
 
 
-Trigger = ObsPoint | ReportPoint | None
+Trigger = ObsPoint | ReportPoint | VisionPoint | None
 
 
 class Detector(Protocol):

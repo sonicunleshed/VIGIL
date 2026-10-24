@@ -193,7 +193,8 @@
           "OBSERVED_CHANGE",
           "PATIENT_REPORT",
           "DATA_STALE",
-          "DATA_QUALITY"
+          "DATA_QUALITY",
+          "CAMERA_OBSERVATION"
         ],
         "title": "AlertType",
         "type": "string"
@@ -1942,6 +1943,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/TimelineAlertAction"
+                },
+                {
+                  "$ref": "#/components/schemas/TimelineVisionObservation"
                 }
               ]
             },
@@ -1985,6 +1989,30 @@
         "title": "TimelineSymptomReport",
         "type": "object"
       },
+      "TimelineVisionObservation": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "item_type": {
+            "const": "vision_observation",
+            "default": "vision_observation",
+            "title": "Item Type",
+            "type": "string"
+          },
+          "vision": {
+            "$ref": "#/components/schemas/VisionEventOut"
+          }
+        },
+        "required": [
+          "at",
+          "vision"
+        ],
+        "title": "TimelineVisionObservation",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2023,6 +2051,479 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VisionEventIn": {
+        "additionalProperties": false,
+        "description": "One structured camera observation. Images and video are never accepted.",
+        "properties": {
+          "captured_at": {
+            "description": "Browser wall-clock capture time (provenance).",
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "confidence_meaning": {
+            "const": "uncalibrated_model_score",
+            "default": "uncalibrated_model_score",
+            "title": "Confidence Meaning",
+            "type": "string"
+          },
+          "confidence_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Score",
+            "type": "number"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "event_type": {
+            "$ref": "#/components/schemas/VisionEventType"
+          },
+          "features": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,39}$": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "maxLength": 64,
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "title": "Features",
+            "type": "object"
+          },
+          "model_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "patient_id": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional echo; must match the session's patient.",
+            "title": "Patient Id"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "session_id",
+          "event_type",
+          "captured_at",
+          "model_version",
+          "confidence_score"
+        ],
+        "title": "VisionEventIn",
+        "type": "object"
+      },
+      "VisionEventOut": {
+        "properties": {
+          "captured_at": {
+            "description": "Browser wall-clock capture time (provenance).",
+            "format": "date-time",
+            "title": "Captured At",
+            "type": "string"
+          },
+          "confidence_meaning": {
+            "title": "Confidence Meaning",
+            "type": "string"
+          },
+          "confidence_score": {
+            "title": "Confidence Score",
+            "type": "number"
+          },
+          "event_type": {
+            "$ref": "#/components/schemas/VisionEventType"
+          },
+          "features": {
+            "additionalProperties": true,
+            "title": "Features",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "observed_at": {
+            "description": "Simulation clock when VIGIL received it.",
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "source": {
+            "const": "vision_local",
+            "default": "vision_local",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "patient_id",
+          "event_type",
+          "observed_at",
+          "captured_at",
+          "received_at",
+          "confidence_score",
+          "confidence_meaning",
+          "features",
+          "model_version"
+        ],
+        "title": "VisionEventOut",
+        "type": "object"
+      },
+      "VisionEventType": {
+        "description": "Descriptive camera observations. None of them is a clinical finding.",
+        "enum": [
+          "person_present",
+          "person_absent",
+          "posture_transition",
+          "significant_motion",
+          "possible_fall_like_motion"
+        ],
+        "title": "VisionEventType",
+        "type": "string"
+      },
+      "VisionIngestResult": {
+        "properties": {
+          "alerts": {
+            "description": "Review requests this event opened, if any.",
+            "items": {
+              "$ref": "#/components/schemas/AlertOut"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "created",
+              "duplicate"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "vision_event": {
+            "$ref": "#/components/schemas/VisionEventOut"
+          }
+        },
+        "required": [
+          "status",
+          "event_id",
+          "vision_event",
+          "alerts"
+        ],
+        "title": "VisionIngestResult",
+        "type": "object"
+      },
+      "VisionSessionCreatedOut": {
+        "properties": {
+          "consent_acknowledged": {
+            "title": "Consent Acknowledged",
+            "type": "boolean"
+          },
+          "device_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Label"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "started_by": {
+            "title": "Started By",
+            "type": "string"
+          },
+          "started_wall_at": {
+            "format": "date-time",
+            "title": "Started Wall At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VisionSessionStatus"
+          },
+          "stop_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Reason"
+          },
+          "stopped_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopped At"
+          },
+          "token": {
+            "description": "Shown once. Send as the X-Vision-Token header.",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "status",
+          "consent_acknowledged",
+          "device_label",
+          "model_version",
+          "started_by",
+          "started_at",
+          "started_wall_at",
+          "stopped_at",
+          "stop_reason",
+          "token"
+        ],
+        "title": "VisionSessionCreatedOut",
+        "type": "object"
+      },
+      "VisionSessionIn": {
+        "additionalProperties": false,
+        "description": "Staff manually bind a camera session to one patient. VIGIL never infers identity.",
+        "properties": {
+          "actor_id": {
+            "maxLength": 40,
+            "minLength": 3,
+            "pattern": "^[a-z0-9-]+$",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "consent_acknowledged": {
+            "title": "Consent Acknowledged",
+            "type": "boolean"
+          },
+          "device_label": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Label"
+          },
+          "model_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "patient_id": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Patient Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "actor_id",
+          "consent_acknowledged",
+          "model_version"
+        ],
+        "title": "VisionSessionIn",
+        "type": "object"
+      },
+      "VisionSessionOut": {
+        "properties": {
+          "consent_acknowledged": {
+            "title": "Consent Acknowledged",
+            "type": "boolean"
+          },
+          "device_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Label"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "started_by": {
+            "title": "Started By",
+            "type": "string"
+          },
+          "started_wall_at": {
+            "format": "date-time",
+            "title": "Started Wall At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VisionSessionStatus"
+          },
+          "stop_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Reason"
+          },
+          "stopped_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopped At"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "status",
+          "consent_acknowledged",
+          "device_label",
+          "model_version",
+          "started_by",
+          "started_at",
+          "started_wall_at",
+          "stopped_at",
+          "stop_reason"
+        ],
+        "title": "VisionSessionOut",
+        "type": "object"
+      },
+      "VisionSessionStatus": {
+        "enum": [
+          "active",
+          "stopped"
+        ],
+        "title": "VisionSessionStatus",
+        "type": "string"
+      },
+      "VisionStopIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "VisionStopIn",
         "type": "object"
       },
       "WorkflowStatus": {
@@ -2890,6 +3391,308 @@
         "summary": "Post Symptom Report",
         "tags": [
           "ingest"
+        ]
+      }
+    },
+    "/api/vision/events": {
+      "post": {
+        "operationId": "post_event_api_vision_events_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Vision-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Vision-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionEventIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Duplicate delivery (idempotent no-op)"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionIngestResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Invalid session token"
+          },
+          "409": {
+            "description": "Session stopped, or event_id reused with a different payload"
+          },
+          "413": {
+            "description": "Body too large"
+          },
+          "422": {
+            "description": "Validation failed (schema, patient/session mismatch, clock skew)"
+          },
+          "429": {
+            "description": "Too many events for this session"
+          }
+        },
+        "summary": "Post Event",
+        "tags": [
+          "vision"
+        ]
+      }
+    },
+    "/api/vision/sessions": {
+      "get": {
+        "operationId": "list_sessions_api_vision_sessions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Patient Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "active",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Active",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VisionSessionOut"
+                  },
+                  "title": "Response List Sessions Api Vision Sessions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sessions",
+        "tags": [
+          "vision"
+        ]
+      },
+      "post": {
+        "operationId": "create_session_api_vision_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionSessionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionSessionCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Unknown demo actor"
+          },
+          "404": {
+            "description": "Unknown patient"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Session",
+        "tags": [
+          "vision"
+        ]
+      }
+    },
+    "/api/vision/sessions/{session_id}/events": {
+      "get": {
+        "operationId": "session_events_api_vision_sessions__session_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VisionEventOut"
+                  },
+                  "title": "Response Session Events Api Vision Sessions  Session Id  Events Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown session"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Session Events",
+        "tags": [
+          "vision"
+        ]
+      }
+    },
+    "/api/vision/sessions/{session_id}/stop": {
+      "post": {
+        "operationId": "stop_session_api_vision_sessions__session_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Vision-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Vision-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/VisionStopIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Invalid session token"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop Session",
+        "tags": [
+          "vision"
         ]
       }
     },

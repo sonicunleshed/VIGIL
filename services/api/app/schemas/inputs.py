@@ -7,7 +7,13 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from app.domain import KIND_SPECS, SYMPTOM_TAGS, ObservationKind, ObservationQuality
+from app.domain import (
+    KIND_SPECS,
+    SYMPTOM_TAGS,
+    ObservationKind,
+    ObservationQuality,
+    VisionEventType,
+)
 
 Source = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[a-z0-9][a-z0-9_.:-]*$")]
 PatientId = Annotated[str, Field(min_length=1, max_length=16)]
@@ -95,3 +101,53 @@ class StartIn(_Strict):
 
 class StepIn(_Strict):
     minutes: float = Field(default=5.0, gt=0, le=240)
+
+
+ModelVersion = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9._-]+$")]
+FeatureValue = bool | int | float | Annotated[str, Field(max_length=64)]
+MAX_FEATURES = 12
+
+
+class VisionSessionIn(_Strict):
+    """Staff manually bind a camera session to one patient. VIGIL never infers identity."""
+
+    patient_id: PatientId
+    actor_id: ActorId
+    consent_acknowledged: bool
+    model_version: ModelVersion
+    device_label: str | None = Field(default=None, max_length=80)
+
+    @model_validator(mode="after")
+    def _consent(self) -> VisionSessionIn:
+        if not self.consent_acknowledged:
+            raise ValueError("consent_acknowledged must be true to start a camera session")
+        return self
+
+
+class VisionEventIn(_Strict):
+    """One structured camera observation. Images and video are never accepted."""
+
+    schema_version: Literal[1] = 1
+    event_id: UUID
+    session_id: UUID
+    patient_id: PatientId | None = Field(
+        default=None, description="Optional echo; must match the session's patient."
+    )
+    event_type: VisionEventType
+    captured_at: AwareDatetime = Field(description="Browser wall-clock capture time (provenance).")
+    model_version: ModelVersion
+    confidence_score: float = Field(ge=0, le=1)
+    confidence_meaning: Literal["uncalibrated_model_score"] = "uncalibrated_model_score"
+    features: dict[Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,39}$")], FeatureValue] = Field(
+        default_factory=dict
+    )
+
+    @model_validator(mode="after")
+    def _features(self) -> VisionEventIn:
+        if len(self.features) > MAX_FEATURES:
+            raise ValueError(f"at most {MAX_FEATURES} feature fields")
+        return self
+
+
+class VisionStopIn(_Strict):
+    reason: str | None = Field(default=None, max_length=40)

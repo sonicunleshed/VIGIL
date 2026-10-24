@@ -57,8 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="VIGIL API",
         version=VERSION,
-        description=(app_doc or "")
-        + "\n\nSynthetic data only. Alerts are advisory; clinicians make every decision.",
+        description=(app_doc or "") + "\n\nAlerts are advisory; clinicians make every decision.",
         lifespan=lifespan,
     )
     app.add_middleware(

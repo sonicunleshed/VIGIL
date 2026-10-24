@@ -94,12 +94,12 @@ class HybridDetector:
                 if k not in trends:
                     parts.append(
                         f"{SHORT[k]} {fmt_value(k, p.value)} at {fmt_time(p.observed_at)} "
-                        f"{'above' if direction == 'high' else 'below'} demo limit"
+                        f"{'above' if direction == 'high' else 'below'} limit"
                     )
                 rules.append(limit_rule_text(k, direction, config.limits[k]))
                 points.append(p)
         if len(changed) >= 2:
-            rules.append("Two or more vitals changed together → prompt review (demo policy)")
+            rules.append("Two or more vitals changed together → prompt review")
 
         signals = "signal" if len(changed) == 1 else "signals"
         return Candidate(
@@ -143,7 +143,7 @@ class HybridDetector:
                 f"No recent good-quality {', '.join(missing)} in the last "
                 f"{config.trend_window_minutes} min; those vitals are unknown, not normal."
             )
-        notes.append("Observations are intermittent synthetic samples, not continuous monitoring.")
+        notes.append("Readings are intermittent, not continuous monitoring.")
         return notes
 
     # -- reports, quality, freshness --------------------------------------
@@ -162,7 +162,7 @@ class HybridDetector:
             rules.append("Patient pressed 'Get staff help now' → prompt review")
         if tags & config.urgent_report_tags:
             rules.append(
-                "Report tag in demo prompt-review list: "
+                "Report tag in prompt-review list: "
                 + ", ".join(sorted(tags & config.urgent_report_tags))
             )
         if not rules:
@@ -238,9 +238,7 @@ class HybridDetector:
             family="stale",
             created_at=due,
             event_ids=ids,
-            rules=[
-                f"No observation newer than {config.review_interval_minutes} min (demo interval)"
-            ],
+            rules=[f"No observation newer than {config.review_interval_minutes} min"],
             limitations=["Current values are unknown. Absence of data is not stability."],
             cooldown_minutes=config.review_interval_minutes,
         )

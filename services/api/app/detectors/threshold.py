@@ -40,7 +40,7 @@ class ThresholdDetector:
                 urgency=WorkflowUrgency.REVIEW,
                 summary=(
                     f"{SHORT[latest.kind]} {fmt_value(latest.kind, latest.value)} at "
-                    f"{fmt_time(latest.observed_at)} is outside the demo limit"
+                    f"{fmt_time(latest.observed_at)} is outside the limit"
                 ),
                 family=f"threshold:{latest.kind.value}:{direction}",
                 created_at=now,

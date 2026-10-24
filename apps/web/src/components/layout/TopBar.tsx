@@ -4,7 +4,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Clock, Menu, Search } from "lucide-react";
 import { Suspense, useId, useState, type FormEvent } from "react";
 import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
-import { SimulationBadge } from "@/components/ui/SimulationBadge";
 import { formatClock } from "@/lib/format";
 import { pageMeta } from "@/lib/routes";
 import { useVigil } from "@/lib/store";
@@ -89,16 +88,10 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <div className="flex items-center gap-4 max-sm:order-1 max-sm:w-full max-sm:justify-between">
           <span className="tabular hidden items-center gap-1.5 text-xs text-fg-2 lg:inline-flex">
             <Clock aria-hidden className="size-3.5 text-fg-3" />
-            <span className="sr-only">Simulated time</span>
+            <span className="sr-only">Clock</span>
             {simulation ? `${formatClock(simulation.clock, true)} UTC` : "—"}
           </span>
           <ConnectionStatus state={connection} />
-          <span className="hidden sm:inline">
-            <SimulationBadge />
-          </span>
-          <span className="sm:hidden">
-            <SimulationBadge compact />
-          </span>
         </div>
       </div>
     </header>

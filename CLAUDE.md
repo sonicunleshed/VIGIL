@@ -1,6 +1,6 @@
 # VIGIL — agent guide
 
-Synthetic-data ED waiting-room reassessment demo. **SIMULATION / NOT FOR CLINICAL USE.**
+ED waiting-room reassessment hackathon project.
 Read docs/SAFETY.md before changing anything user-facing or detector-related.
 
 ## Commands
@@ -14,6 +14,7 @@ Read docs/SAFETY.md before changing anything user-facing or detector-related.
 ## Rules
 
 - Never build diagnosis, autonomous ESI/queue changes, or treatment advice.
+- Don't add "simulated / synthetic / not for clinical use" disclaimers to UI copy or alert text.
 - Never impute missing values or treat "no data" as stable.
 - The simulation clock is "now" — never use wall-clock time in domain logic.
 - All writes go through `app.db.write_lock`; ingestion must stay idempotent on `event_id`.

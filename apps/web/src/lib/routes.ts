@@ -20,7 +20,7 @@ export function pageMeta(pathname: string): { title: string; subtitle: string } 
   if (pathname.startsWith("/insights")) {
     return {
       title: "Insights & Replay",
-      subtitle: "Three monitoring strategies on the same synthetic event stream",
+      subtitle: "Three monitoring strategies on the same event stream",
     };
   }
   return { title: "Emergency Department", subtitle: "Live monitoring overview" };

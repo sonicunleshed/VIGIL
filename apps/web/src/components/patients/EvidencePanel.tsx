@@ -110,8 +110,7 @@ function AlertEvidenceBlock({ alert, observations }: { alert: AlertOut; observat
           )}
           <p>
             Detector <span className="font-mono text-fg-2">{alert.detector}</span> version{" "}
-            <span className="font-mono text-fg-2">{alert.detector_version}</span>. Thresholds are
-            unvalidated demonstration values.
+            <span className="font-mono text-fg-2">{alert.detector_version}</span>.
           </p>
           <pre className="max-h-48 overflow-auto rounded-md bg-bg p-2 font-mono text-[11px] text-fg-2">
             {JSON.stringify(alert.evidence_json, null, 2)}

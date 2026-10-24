@@ -18,8 +18,6 @@ from app.domain import (
     WorkflowUrgency,
 )
 
-DISCLAIMER = "SIMULATION / NOT FOR CLINICAL USE"
-
 
 class _Out(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -27,7 +25,6 @@ class _Out(BaseModel):
 
 class HealthOut(_Out):
     status: Literal["ok"]
-    disclaimer: str = DISCLAIMER
     version: str
 
 
@@ -101,7 +98,6 @@ class PatientSummary(_Out):
 
 class PatientsOut(_Out):
     as_of: datetime
-    disclaimer: str = DISCLAIMER
     patients: list[PatientSummary]
 
 

@@ -18,7 +18,6 @@ def _snapshot(client: TestClient) -> list[object]:
 
 def test_fresh_start_loads_30_patients_with_history(client: TestClient) -> None:
     body = client.get("/api/patients").json()
-    assert body["disclaimer"] == "SIMULATION / NOT FOR CLINICAL USE"
     assert len(body["patients"]) == 30
     assert body["as_of"] == "2026-01-15T14:00:00Z"
     # Every patient has triage vitals at t0; nothing has been imputed for gaps.

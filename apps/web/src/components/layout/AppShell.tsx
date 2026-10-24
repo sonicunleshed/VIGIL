@@ -62,10 +62,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main id="main" tabIndex={-1} className="flex-1 px-4 py-6 md:px-8 md:py-8">
           {children}
         </main>
-        <footer className="border-t border-line px-4 py-4 text-xs text-fg-3 md:px-8">
-          Educational research prototype. Not clinically validated or for patient care. All patients
-          are synthetic; alerts are advisory and every clinical decision belongs to a clinician.
-        </footer>
       </div>
     </div>
   );

@@ -44,4 +44,3 @@ export type StreamEventType =
   | "reset"
   | "resync";
 
-export const DISCLAIMER = "SIMULATION / NOT FOR CLINICAL USE";

@@ -60,7 +60,7 @@ export function OverviewView() {
       <SimulationControls />
 
       <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Patients waiting" value={kpis.patientsWaiting} icon={Users} hint="Synthetic patients in the waiting room" />
+        <KpiCard label="Patients waiting" value={kpis.patientsWaiting} icon={Users} hint="In the waiting room" />
         <KpiCard
           label="Active reassessment alerts"
           value={kpis.activeAlerts}
@@ -77,7 +77,7 @@ export function OverviewView() {
           label="Median wait"
           value={formatDuration(kpis.medianWaitMinutes)}
           icon={Hourglass}
-          hint="Since arrival, at the simulation clock"
+          hint="Since arrival"
         />
       </section>
 

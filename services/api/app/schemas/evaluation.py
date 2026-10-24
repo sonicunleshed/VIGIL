@@ -9,8 +9,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain import AlertType, ObservationKind, WorkflowUrgency
 
-EVAL_DISCLAIMER = "Synthetic evaluation — not clinical validation"
-
 
 class _M(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -41,7 +39,6 @@ class ReplayCatalogOut(_M):
     t0: datetime
     t_end: datetime
     patients: list[ReplayPatientOut]
-    disclaimer: str = EVAL_DISCLAIMER
 
 
 class ReplayCompareIn(_M):
@@ -106,7 +103,6 @@ class ReplayCompareOut(_M):
     observations: list[ReplayObservationOut]
     reports: list[ReplayReportOut]
     detectors: list[DetectorReplayOut]
-    disclaimer: str = EVAL_DISCLAIMER
 
 
 class CoverageOut(_M):
@@ -162,4 +158,3 @@ class EvaluationOut(_M):
     assumptions: list[str]
     detectors: list[DetectorMetricsOut]
     per_archetype: list[ArchetypeRowOut]
-    disclaimer: str = EVAL_DISCLAIMER

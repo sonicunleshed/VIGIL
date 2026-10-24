@@ -114,7 +114,7 @@ New alerts are published as `alert_created` SSE events.
 ## Detectors (services/api/app/detectors)
 
 Pure functions over an in-memory `PatientHistory`, so live detection and replay share
-code. All numbers live in `config.py` and are **unvalidated demonstration values**.
+code. All numbers live in `config.py`.
 
 | Detector | Role | Logic |
 |---|---|---|

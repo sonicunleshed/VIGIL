@@ -107,7 +107,7 @@ def test_evaluation_endpoint_is_reproducible_and_recorded(client: TestClient) ->
     }
     assert cov["threshold"]["symptom_report"] == cov["trend"]["data_gap"] == 0
     assert cov["hybrid"]["symptom_report"] > 0 and cov["hybrid"]["data_gap"] > 0
-    assert any("not clinical validation" in s for s in a["assumptions"])
+    assert any("scenario author" in s for s in a["assumptions"])
     rows = sum(r["patients"] for r in a["per_archetype"])
     assert rows == 60
 
@@ -127,7 +127,6 @@ def test_replay_compare_negative_control(client: TestClient) -> None:
     assert by["hybrid"]["false_change_alerts"] == 0
     assert [a["type"] for a in by["hybrid"]["alerts"]] == ["DATA_QUALITY"]
     assert out["patient"]["labels"][0]["label_type"] == "negative_control"
-    assert out["disclaimer"] == "Synthetic evaluation — not clinical validation"
     assert all(o["delivered_at"] >= o["observed_at"] for o in out["observations"])
 
 

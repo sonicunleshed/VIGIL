@@ -1,1 +1,1 @@
-"""VIGIL API — synthetic-data research prototype. SIMULATION / NOT FOR CLINICAL USE."""
+"""VIGIL API — emergency department waiting-room reassessment support."""

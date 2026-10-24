@@ -2,8 +2,7 @@
 
 Steps marked *(later)* depend on phases not yet built.
 
-1. **0:00–0:25** Problem: triage is a snapshot; patients change while waiting. Point at the
-   simulation banner.
+1. **0:00–0:25** Problem: triage is a snapshot; patients change while waiting.
 2. **0:25–0:50** 30-patient dashboard and timeline (`pnpm dev`, http://localhost:3000).
 3. **0:50–1:25** *(later)* Start the subtle-change scenario; show the evidence-based
    reassessment alert.

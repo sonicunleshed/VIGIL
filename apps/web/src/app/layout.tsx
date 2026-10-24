@@ -6,9 +6,8 @@ import { VigilProvider } from "@/lib/store";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VIGIL · Simulation",
-  description:
-    "Synthetic-data research demo of waiting-room reassessment support. Not for clinical use.",
+  title: "VIGIL",
+  description: "Emergency department waiting-room reassessment support.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

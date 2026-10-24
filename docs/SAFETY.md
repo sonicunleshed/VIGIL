@@ -1,28 +1,25 @@
 # Safety model
 
-VIGIL is a **synthetic-data research demo**. These rules are enforced in code and review.
+These rules are enforced in code and review.
 
 ## Hard rules
 
 1. Synthetic data only. No real patient data, identifiable video or live telemetry.
-2. "SIMULATION / NOT FOR CLINICAL USE" is shown on every screen (root layout banner) and in API
-   health/patient responses.
-3. No diagnosis, autonomous ESI assignment, queue changes, dispatch or treatment suggestions.
+2. No diagnosis, autonomous ESI assignment, queue changes, dispatch or treatment suggestions.
    `initial_esi_simulated` is set by the simulator and no endpoint modifies it.
-4. Alerts are advisory. Only clinician actions (acknowledge, resolve) change alert status, and
+3. Alerts are advisory. Only clinician actions (acknowledge, resolve) change alert status, and
    every action is written to the audit log with actor and simulated time.
-5. No invented clinical facts or calibrated risk probabilities. Alert explanations will be
+4. No invented clinical facts or calibrated risk probabilities. Alert explanations will be
    templates citing observed event ids.
-6. **No new data ≠ stable.** Missing measurements stay missing (`null` = never observed); the
+5. **No new data ≠ stable.** Missing measurements stay missing (`null` = never observed); the
    UI says "unknown" / "never observed". Stale-data reminders (`DATA_STALE`) are a separate
    alert type from observed change (`OBSERVED_CHANGE`).
-7. No performance claims about real-world safety from synthetic tests.
+6. No performance claims about real-world safety from synthetic tests.
 
 ## Validation bounds are not thresholds
 
 `app/domain.py` bounds (e.g. heart rate 0–300 bpm) only reject typos and impossible values.
-Detector thresholds in `app/detectors/config.py` are labelled *unvalidated demonstration values*
-in code, in every alert's rule text, and in the UI.
+Detector thresholds live in `app/detectors/config.py` and are hand-picked, not clinically derived.
 
 ## Generator drift is not physiology
 

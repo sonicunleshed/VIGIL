@@ -1,7 +1,6 @@
 # Evaluation protocol
 
-> **Synthetic evaluation — not clinical validation.** Labels are the scenario author's intent.
-> Detector thresholds are unvalidated demonstration values.
+Labels are the scenario author's intent; detector thresholds are hand-picked.
 
 Live numbers: open **Insights & Replay** in the web app, or call
 `GET /api/evaluation?seeds=1,2,3` (≤ 20 seeds). Each run has a deterministic `run_id` derived

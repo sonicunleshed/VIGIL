@@ -58,7 +58,6 @@ def stream(request: Request, runtime: RuntimeDep) -> StreamingResponse:
     with runtime.session_factory() as db:
         state = simulation.get_state(db)
         hello: dict[str, Any] = {
-            "disclaimer": "SIMULATION / NOT FOR CLINICAL USE",
             "simulation": simulation.state_out(db, state).model_dump(mode="json")
             if state
             else None,

@@ -56,6 +56,6 @@ export function dataLimitations(detail: PatientDetail, timeline: TimelineOut | n
     const oldest = Math.max(...ages);
     out.push(`Oldest of the latest values is ${Math.floor(oldest / 60)} min old. Values may have changed since.`);
   }
-  out.push("Observations are intermittent synthetic samples, not continuous monitoring.");
+  out.push("Readings are intermittent, not continuous monitoring.");
   return out;
 }

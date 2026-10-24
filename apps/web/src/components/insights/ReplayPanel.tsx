@@ -13,7 +13,7 @@ import { formatClock } from "@/lib/format";
 import { ARCHETYPE_TEXT, LABEL_TEXT, type Domain } from "@/lib/insights";
 import { VITALS, VITAL_BY_KIND } from "@/lib/vitals";
 
-const STEP_MS = 5 * 60_000; // scrubber advance per animation tick (5 simulated minutes)
+const STEP_MS = 5 * 60_000; // scrubber advance per animation tick (5 scenario minutes)
 
 export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPatient: string | null }) {
   const [catalog, setCatalog] = useState<ReplayCatalogOut | null>(null);
@@ -88,7 +88,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-[11px] text-fg-3">
-          Synthetic patient trajectory
+          Patient trajectory
           <select
             value={patientId ?? ""}
             onChange={(e) => setPatientId(e.target.value)}

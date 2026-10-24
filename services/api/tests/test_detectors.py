@@ -72,7 +72,7 @@ def test_hybrid_single_signal_trend_is_review_with_evidence() -> None:
     assert c.urgency == WorkflowUrgency.REVIEW
     assert "HR 82 bpm → 96 bpm" in c.summary
     assert "heart_rate-60" in c.event_ids and "heart_rate-0" in c.event_ids
-    assert any("demo values, unvalidated" in r for r in c.rules)
+    assert any("HR slope +10 bpm/h" in r for r in c.rules)
     assert c.baseline == {"heart_rate": 82.0}
 
 

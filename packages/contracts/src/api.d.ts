@@ -563,11 +563,6 @@ export interface components {
             config_hash: string;
             /** Detectors */
             detectors: components["schemas"]["DetectorMetricsOut"][];
-            /**
-             * Disclaimer
-             * @default Synthetic evaluation — not clinical validation
-             */
-            disclaimer: string;
             /** Patient Hours */
             patient_hours: number;
             /** Patients */
@@ -598,11 +593,6 @@ export interface components {
         };
         /** HealthOut */
         HealthOut: {
-            /**
-             * Disclaimer
-             * @default SIMULATION / NOT FOR CLINICAL USE
-             */
-            disclaimer: string;
             /**
              * Status
              * @constant
@@ -816,11 +806,6 @@ export interface components {
              * Format: date-time
              */
             as_of: string;
-            /**
-             * Disclaimer
-             * @default SIMULATION / NOT FOR CLINICAL USE
-             */
-            disclaimer: string;
             /** Patients */
             patients: components["schemas"]["PatientSummary"][];
         };
@@ -851,11 +836,6 @@ export interface components {
         };
         /** ReplayCatalogOut */
         ReplayCatalogOut: {
-            /**
-             * Disclaimer
-             * @default Synthetic evaluation — not clinical validation
-             */
-            disclaimer: string;
             /** Patients */
             patients: components["schemas"]["ReplayPatientOut"][];
             /** Scenario Id */
@@ -894,11 +874,6 @@ export interface components {
             config_hash: string;
             /** Detectors */
             detectors: components["schemas"]["DetectorReplayOut"][];
-            /**
-             * Disclaimer
-             * @default Synthetic evaluation — not clinical validation
-             */
-            disclaimer: string;
             /** Observations */
             observations: components["schemas"]["ReplayObservationOut"][];
             patient: components["schemas"]["ReplayPatientOut"];

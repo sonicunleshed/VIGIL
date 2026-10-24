@@ -31,7 +31,7 @@ TARGET_TYPE = {
 }
 
 ASSUMPTIONS = [
-    "Synthetic evaluation, not clinical validation. Labels are the scenario author's intent.",
+    "Labels are the scenario author's intent.",
     "Evaluation period is t0 to t_end; patient-hours = patients x period hours.",
     "A labelled event counts as detected when an alert of the matching type for that patient "
     "is raised inside the label window (deterioration → observed change, symptom report → "
@@ -41,7 +41,7 @@ ASSUMPTIONS = [
     "Stale-data, data-quality and patient-report alerts are workflow alerts: they count toward "
     "alert burden, not toward precision.",
     "Replays have no clinician actions, so alerts stay unresolved and families are not repeated.",
-    "Detector thresholds are unvalidated demonstration values. One threshold (systolic BP "
+    "Detector thresholds are hand-picked. One threshold (systolic BP "
     "trend) was adjusted after inspecting seeds 42, 7 and 1, so results on those seeds are not "
     "independent of tuning.",
 ]

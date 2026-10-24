@@ -111,7 +111,7 @@ export function PatientDetailView() {
           </Link>
           <dl className="tabular flex flex-wrap gap-x-5 gap-y-1 text-xs">
             <div>
-              <dt className="inline text-fg-3">ESI (clinician-assigned, simulated) </dt>
+              <dt className="inline text-fg-3">ESI </dt>
               <dd className="inline font-semibold text-fg">{detail.initial_esi_simulated}</dd>
             </div>
             <div>

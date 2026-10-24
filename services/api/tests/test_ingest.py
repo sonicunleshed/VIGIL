@@ -7,10 +7,10 @@ from fastapi.testclient import TestClient
 from tests.conftest import new_id, obs_body
 
 
-def test_health_has_disclaimer(client: TestClient) -> None:
+def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json()["disclaimer"] == "SIMULATION / NOT FOR CLINICAL USE"
+    assert r.json()["status"] == "ok"
 
 
 def test_create_then_duplicate_is_idempotent(client: TestClient) -> None:

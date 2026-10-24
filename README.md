@@ -1,8 +1,5 @@
 # VIGIL
 
-> **SIMULATION / NOT FOR CLINICAL USE.** Synthetic-data research prototype. Not a medical device,
-> clinical decision system, or deployment-ready hospital product.
-
 VIGIL detects **changes after initial triage** and helps clinicians decide which waiting-room
 patients may need reassessment. It is not an autonomous triage engine: it never assigns ESI,
 diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every decision.
@@ -93,7 +90,6 @@ Interactive docs: http://localhost:8000/docs. See [docs/EVALUATION.md](docs/EVAL
 
 ## Limitations
 
-- Synthetic data only; "ground truth" labels are scenario-author intent, not clinical outcomes.
+- "Ground truth" labels are scenario-author intent.
 - No authentication beyond fixed demo actor IDs; no PHI support; single-process server.
-- Detector thresholds are unvalidated demonstration values tuned only against the synthetic
-  generator. Threshold and trend detectors exist as comparison baselines; only the hybrid runs live.
+- Detector thresholds are hand-picked against the scenario generator. Threshold and trend detectors exist as comparison baselines; only the hybrid runs live.

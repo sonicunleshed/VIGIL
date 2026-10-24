@@ -38,7 +38,7 @@ def fmt_time(dt: datetime) -> str:
 
 
 def limit_breach(point: ObsPoint, limit: Limit) -> str | None:
-    """'high' / 'low' if the value is outside the demo limit, else None."""
+    """'high' / 'low' if the value is outside the limit, else None."""
     if limit.high is not None and point.value > limit.high:
         return "high"
     if limit.low is not None and point.value < limit.low:
@@ -50,7 +50,7 @@ def limit_rule_text(kind: ObservationKind, direction: str, limit: Limit) -> str:
     bound = limit.high if direction == "high" else limit.low
     op = ">" if direction == "high" else "<"
     assert bound is not None
-    return f"{SHORT[kind]} {op} {fmt_value(kind, bound)} (demo limit, unvalidated)"
+    return f"{SHORT[kind]} {op} {fmt_value(kind, bound)}"
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ class TrendFinding:
         return (
             f"{SHORT[self.kind]} slope {sign}{r.slope_per_hour:g} {unit}/h and "
             f"{sign}{r.delta_from_baseline:g} {unit} from baseline over "
-            f"{config.trend_window_minutes} min (demo values, unvalidated)"
+            f"{config.trend_window_minutes} min"
         )
 
     def describe(self) -> str:

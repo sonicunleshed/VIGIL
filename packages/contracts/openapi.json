@@ -581,11 +581,6 @@
             "title": "Detectors",
             "type": "array"
           },
-          "disclaimer": {
-            "default": "Synthetic evaluation \u2014 not clinical validation",
-            "title": "Disclaimer",
-            "type": "string"
-          },
           "patient_hours": {
             "title": "Patient Hours",
             "type": "number"
@@ -658,11 +653,6 @@
       },
       "HealthOut": {
         "properties": {
-          "disclaimer": {
-            "default": "SIMULATION / NOT FOR CLINICAL USE",
-            "title": "Disclaimer",
-            "type": "string"
-          },
           "status": {
             "const": "ok",
             "title": "Status",
@@ -1126,11 +1116,6 @@
             "title": "As Of",
             "type": "string"
           },
-          "disclaimer": {
-            "default": "SIMULATION / NOT FOR CLINICAL USE",
-            "title": "Disclaimer",
-            "type": "string"
-          },
           "patients": {
             "items": {
               "$ref": "#/components/schemas/PatientSummary"
@@ -1199,11 +1184,6 @@
       "ReplayCatalogOut": {
         "additionalProperties": false,
         "properties": {
-          "disclaimer": {
-            "default": "Synthetic evaluation \u2014 not clinical validation",
-            "title": "Disclaimer",
-            "type": "string"
-          },
           "patients": {
             "items": {
               "$ref": "#/components/schemas/ReplayPatientOut"
@@ -1281,11 +1261,6 @@
             },
             "title": "Detectors",
             "type": "array"
-          },
-          "disclaimer": {
-            "default": "Synthetic evaluation \u2014 not clinical validation",
-            "title": "Disclaimer",
-            "type": "string"
           },
           "observations": {
             "items": {
@@ -2072,7 +2047,7 @@
     }
   },
   "info": {
-    "description": "VIGIL API \u2014 synthetic-data research prototype. SIMULATION / NOT FOR CLINICAL USE.\n\nSynthetic data only. Alerts are advisory; clinicians make every decision.",
+    "description": "VIGIL API \u2014 emergency department waiting-room reassessment support.\n\nAlerts are advisory; clinicians make every decision.",
     "title": "VIGIL API",
     "version": "0.1.0"
   },

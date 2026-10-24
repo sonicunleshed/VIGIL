@@ -31,7 +31,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
       <CardHeader
         id="queue-title"
         title="Waiting-room queue"
-        subtitle="ESI is clinician-assigned (simulated) and never changed by VIGIL. Monitoring state reflects reassessment alerts only."
+        subtitle="ESI is set at triage and never changed by VIGIL. Monitoring state reflects reassessment alerts only."
       />
       <div className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-3">
         <div className="relative">
@@ -63,7 +63,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
           </select>
         </label>
         <label className="flex flex-col gap-1 text-[11px] text-fg-3">
-          ESI (simulated)
+          ESI
           <select
             className={selectCls}
             value={String(f.esi)}
@@ -99,11 +99,11 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <caption className="sr-only">Synthetic waiting-room patients</caption>
+            <caption className="sr-only">Waiting-room patients</caption>
             <thead className="text-[11px] uppercase tracking-wide text-fg-3">
               <tr className="border-b border-line">
                 <th scope="col" className="px-5 py-2.5 font-medium">Patient</th>
-                <th scope="col" className="px-3 py-2.5 font-medium">ESI (clinician)</th>
+                <th scope="col" className="px-3 py-2.5 font-medium">ESI</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Waiting</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Last observation</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Monitoring state</th>

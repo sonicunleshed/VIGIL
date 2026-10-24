@@ -2,7 +2,6 @@ import type { TimelineOut } from "@vigil/contracts";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { VitalsCard } from "@/components/patients/VitalsCard";
-import { SimulationBadge } from "@/components/ui/SimulationBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { readEvidence } from "@/lib/evidence";
 import { buildTimelineEntries } from "@/lib/timeline";
@@ -10,13 +9,6 @@ import { VITAL_BY_KIND } from "@/lib/vitals";
 import { alert, obs } from "./fixtures";
 
 afterEach(cleanup);
-
-describe("SimulationBadge", () => {
-  it("states simulation mode in text", () => {
-    render(<SimulationBadge />);
-    expect(screen.getByRole("note").textContent).toContain("SIMULATION MODE · SYNTHETIC PATIENT DATA");
-  });
-});
 
 describe("StatusBadge", () => {
   it("conveys status with text and an icon, not color alone", () => {

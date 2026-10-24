@@ -44,7 +44,7 @@ ORDER = ["threshold", "trend", "hybrid"]
 RUN_NAMESPACE = uuid.UUID("5d3f7a90-1c2b-4e8f-9a6d-2b7c4e1f0a33")
 
 DESCRIPTIONS = {
-    "threshold": "Fixed demo limits on the latest reading of each vital.",
+    "threshold": "Fixed limits on the latest reading of each vital.",
     "trend": "Robust slope plus change from baseline, one vital at a time.",
     "hybrid": "VIGIL: limits and trends on good-quality readings, multi-signal concordance, "
     "symptom reports, data-quality and stale-data handling.",

@@ -81,7 +81,7 @@ export function EvaluationPanel() {
         {out && (
           <p className="text-xs text-fg-3">
             Run <span className="font-mono text-fg-2">{out.run_id.slice(0, 8)}</span> · config{" "}
-            <span className="font-mono text-fg-2">{out.config_hash}</span> · {out.patients} synthetic patients ·{" "}
+            <span className="font-mono text-fg-2">{out.config_hash}</span> · {out.patients} patients ·{" "}
             {out.patient_hours} patient-hours
           </p>
         )}
@@ -93,7 +93,7 @@ export function EvaluationPanel() {
         <>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
-              <caption className="sr-only">Detector metrics computed on labelled synthetic scenarios</caption>
+              <caption className="sr-only">Detector metrics on labelled scenarios</caption>
               <thead className="text-[11px] uppercase tracking-wide text-fg-3">
                 <tr className="border-b border-line">
                   <th scope="col" className="py-2 pr-4 font-medium">Metric</th>

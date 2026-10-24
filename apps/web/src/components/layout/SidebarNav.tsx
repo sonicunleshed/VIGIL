@@ -58,28 +58,6 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
                 const base = `flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 ${
                   collapsed ? "justify-center" : ""
                 }`;
-                if (item.planned) {
-                  return (
-                    <li key={item.href}>
-                      <span
-                        aria-disabled="true"
-                        title={`${item.label}: planned, not built yet`}
-                        className={`${base} cursor-not-allowed text-fg-3/70`}
-                      >
-                        <Icon aria-hidden className="size-4 shrink-0" />
-                        {!collapsed && (
-                          <>
-                            <span className="flex-1">{item.label}</span>
-                            <span className="rounded border border-line px-1.5 py-px text-[10px] uppercase tracking-wide">
-                              Planned
-                            </span>
-                          </>
-                        )}
-                        {collapsed && <span className="sr-only">{item.label} (planned)</span>}
-                      </span>
-                    </li>
-                  );
-                }
                 const active = isActive(item.href);
                 return (
                   <li key={item.href}>

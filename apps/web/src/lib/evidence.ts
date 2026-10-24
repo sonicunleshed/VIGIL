@@ -18,7 +18,7 @@ export type AlertEvidence = {
 
 const asStrings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
 
-export function readEvidence(alert: AlertOut): AlertEvidence {
+export function readEvidence(alert: Pick<AlertOut, "evidence_json">): AlertEvidence {
   const e = alert.evidence_json ?? {};
   const { rules, event_ids, limitations, baseline, ...extra } = e as Record<string, unknown>;
   return {

@@ -109,12 +109,11 @@ New alerts are published as `alert_created` SSE events.
 |---|---|
 | "Mark reassessment started" action, `reassessment_started` status | New alert action + status |
 | Simulation Lab scenario selector (stable / gradual / abrupt / missing) | Per-archetype scenario templates; today one mixed template exists |
-| Replay and Analytics with computed metrics | Evaluation/replay engine (Phase 5) |
 | Diastolic BP | Not in the observation vocabulary (systolic only) |
 
 ## Detectors (services/api/app/detectors)
 
-Pure functions over an in-memory `PatientHistory`, so live detection and Phase 5 replay share
+Pure functions over an in-memory `PatientHistory`, so live detection and replay share
 code. All numbers live in `config.py` and are **unvalidated demonstration values**.
 
 | Detector | Role | Logic |
@@ -138,3 +137,12 @@ before detection, so a round is judged as a whole. Staleness is evaluated before
 using only data received by then. Alert ids are UUIDv5 of detector, patient, family and creation
 time. A test runs the full scenario in one 180-minute step and in 7-minute steps and gets
 identical alerts.
+
+## Replay and evaluation (services/api/app/evaluation)
+
+`replay.py` replays a generated scenario through any detector in memory, mirroring the live
+pipeline. A test checks that replaying the hybrid reproduces the live alerts exactly. `metrics.py`
+scores alerts against scenario labels (definitions in docs/EVALUATION.md). `service.py` builds the
+`/api/replay/compare` and `/api/evaluation` responses, caches per seed set, and records each run in
+`detector_runs` under a deterministic `run_id`. The web **Insights & Replay** screen shows only
+readings *delivered* by the scrubber time, so the chart shows what each detector could see.

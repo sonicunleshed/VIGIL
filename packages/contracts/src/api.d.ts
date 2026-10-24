@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evaluation */
+        get: operations["evaluation_api_evaluation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/stream": {
         parameters: {
             query?: never;
@@ -151,6 +168,40 @@ export interface paths {
         get: operations["get_timeline_api_patients__patient_id__timeline_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/replay/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Replay Catalog */
+        get: operations["replay_catalog_api_replay_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/replay/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replay Compare */
+        post: operations["replay_compare_api_replay_compare_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -382,6 +433,32 @@ export interface components {
              */
             as_of: string;
         };
+        /** ArchetypeCellOut */
+        ArchetypeCellOut: {
+            /** Change Alerts */
+            change_alerts: number;
+            /** Detected Events */
+            detected_events: number;
+            /** False Change Alerts */
+            false_change_alerts: number;
+            /** Labelled Events */
+            labelled_events: number;
+            /** Patients */
+            patients: number;
+            /** Workflow Alerts */
+            workflow_alerts: number;
+        };
+        /** ArchetypeRowOut */
+        ArchetypeRowOut: {
+            /** Archetype */
+            archetype: string;
+            /** By Detector */
+            by_detector: {
+                [key: string]: components["schemas"]["ArchetypeCellOut"];
+            };
+            /** Patients */
+            patients: number;
+        };
         /** AuditEntryOut */
         AuditEntryOut: {
             /** Action */
@@ -404,6 +481,116 @@ export interface components {
             /** Id */
             id: number;
         };
+        /** CoverageOut */
+        CoverageOut: {
+            /** Detected */
+            detected: number;
+            /** Label Type */
+            label_type: string;
+            /** Total */
+            total: number;
+        };
+        /** DetectorMetricsOut */
+        DetectorMetricsOut: {
+            /** Alerts By Type */
+            alerts_by_type: {
+                [key: string]: number;
+            };
+            /** Alerts Per Patient Hour */
+            alerts_per_patient_hour: number;
+            /** Change Alerts */
+            change_alerts: number;
+            /** Confusion */
+            confusion: {
+                [key: string]: number;
+            };
+            /** Coverage */
+            coverage: components["schemas"]["CoverageOut"][];
+            /** Description */
+            description: string;
+            /** Detected Events */
+            detected_events: number;
+            /** Detector */
+            detector: string;
+            /** Deterioration Events */
+            deterioration_events: number;
+            /** False Change Alerts */
+            false_change_alerts: number;
+            /** False Change Alerts Per Patient Hour */
+            false_change_alerts_per_patient_hour: number;
+            /** Median Delay Seconds */
+            median_delay_seconds: number | null;
+            /** Precision */
+            precision: number | null;
+            /** Recall */
+            recall: number | null;
+            /** Total Alerts */
+            total_alerts: number;
+            /** True Change Alerts */
+            true_change_alerts: number;
+            /** Version */
+            version: string;
+        };
+        /** DetectorReplayOut */
+        DetectorReplayOut: {
+            /** Alerts */
+            alerts: components["schemas"]["ReplayAlertOut"][];
+            /** Description */
+            description: string;
+            /**
+             * Detection Delay Seconds
+             * @description First observed-change alert inside the first deterioration window minus onset.
+             */
+            detection_delay_seconds: number | null;
+            /** Detector */
+            detector: string;
+            /** False Change Alerts */
+            false_change_alerts: number;
+            /** First Alert At */
+            first_alert_at: string | null;
+            /** First Change Alert At */
+            first_change_alert_at: string | null;
+            /** Missing Data Handling */
+            missing_data_handling: string;
+            /** Version */
+            version: string;
+        };
+        /** EvaluationOut */
+        EvaluationOut: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Config Hash */
+            config_hash: string;
+            /** Detectors */
+            detectors: components["schemas"]["DetectorMetricsOut"][];
+            /**
+             * Disclaimer
+             * @default Synthetic evaluation — not clinical validation
+             */
+            disclaimer: string;
+            /** Patient Hours */
+            patient_hours: number;
+            /** Patients */
+            patients: number;
+            /** Per Archetype */
+            per_archetype: components["schemas"]["ArchetypeRowOut"][];
+            /**
+             * Period End
+             * Format: date-time
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date-time
+             */
+            period_start: string;
+            /** Run Id */
+            run_id: string;
+            /** Scenario */
+            scenario: string;
+            /** Seeds */
+            seeds: number[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -423,6 +610,27 @@ export interface components {
             status: "ok";
             /** Version */
             version: string;
+        };
+        /** LabelOut */
+        LabelOut: {
+            /** Archetype */
+            archetype: string;
+            /** Label Type */
+            label_type: string;
+            /** Note */
+            note: string;
+            /**
+             * Onset At
+             * Format: date-time
+             */
+            onset_at: string;
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
         };
         /** LatestValue */
         LatestValue: {
@@ -615,6 +823,172 @@ export interface components {
             disclaimer: string;
             /** Patients */
             patients: components["schemas"]["PatientSummary"][];
+        };
+        /** ReplayAlertOut */
+        ReplayAlertOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence Json */
+            evidence_json: {
+                [key: string]: unknown;
+            };
+            /** False Change Alert */
+            false_change_alert: boolean;
+            /** Id */
+            id: string;
+            /**
+             * In Label Window
+             * @description Inside a scenario label window of a matching type.
+             */
+            in_label_window: boolean;
+            /** Summary */
+            summary: string;
+            type: components["schemas"]["AlertType"];
+            workflow_urgency: components["schemas"]["WorkflowUrgency"];
+        };
+        /** ReplayCatalogOut */
+        ReplayCatalogOut: {
+            /**
+             * Disclaimer
+             * @default Synthetic evaluation — not clinical validation
+             */
+            disclaimer: string;
+            /** Patients */
+            patients: components["schemas"]["ReplayPatientOut"][];
+            /** Scenario Id */
+            scenario_id: string;
+            /** Seed */
+            seed: number;
+            /**
+             * T0
+             * Format: date-time
+             */
+            t0: string;
+            /**
+             * T End
+             * Format: date-time
+             */
+            t_end: string;
+        };
+        /** ReplayCompareIn */
+        ReplayCompareIn: {
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Scenario
+             * @default waiting-room-30
+             */
+            scenario: string;
+            /**
+             * Seed
+             * @default 42
+             */
+            seed: number;
+        };
+        /** ReplayCompareOut */
+        ReplayCompareOut: {
+            /** Config Hash */
+            config_hash: string;
+            /** Detectors */
+            detectors: components["schemas"]["DetectorReplayOut"][];
+            /**
+             * Disclaimer
+             * @default Synthetic evaluation — not clinical validation
+             */
+            disclaimer: string;
+            /** Observations */
+            observations: components["schemas"]["ReplayObservationOut"][];
+            patient: components["schemas"]["ReplayPatientOut"];
+            /** Reports */
+            reports: components["schemas"]["ReplayReportOut"][];
+            /** Scenario Id */
+            scenario_id: string;
+            /** Seed */
+            seed: number;
+            /**
+             * T0
+             * Format: date-time
+             */
+            t0: string;
+            /**
+             * T End
+             * Format: date-time
+             */
+            t_end: string;
+        };
+        /** ReplayObservationOut */
+        ReplayObservationOut: {
+            /**
+             * Delivered At
+             * Format: date-time
+             * @description When the reading became available to detectors.
+             */
+            delivered_at: string;
+            /**
+             * Deliveries
+             * @description Times delivered; >1 means duplicate deliveries.
+             */
+            deliveries: number;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["ObservationKind"];
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Out Of Order */
+            out_of_order: boolean;
+            /** Quality */
+            quality: string;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: number;
+        };
+        /** ReplayPatientOut */
+        ReplayPatientOut: {
+            /** Archetype */
+            archetype: string;
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Complaint */
+            complaint: string;
+            /** Display Code */
+            display_code: string;
+            /** Id */
+            id: string;
+            /** Initial Esi Simulated */
+            initial_esi_simulated: number;
+            /** Labels */
+            labels: components["schemas"]["LabelOut"][];
+        };
+        /** ReplayReportOut */
+        ReplayReportOut: {
+            /**
+             * Delivered At
+             * Format: date-time
+             */
+            delivered_at: string;
+            /** Free Text */
+            free_text: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+            /** Structured Tags */
+            structured_tags: string[];
+            /** Urgent Help Requested */
+            urgent_help_requested: boolean;
         };
         /** ResetIn */
         ResetIn: {
@@ -1066,6 +1440,46 @@ export interface operations {
             };
         };
     };
+    evaluation_api_evaluation_get: {
+        parameters: {
+            query?: {
+                scenario?: string;
+                /** @description Comma-separated seeds, e.g. 42 or 1,2,3 */
+                seeds?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationOut"];
+                };
+            };
+            /** @description Unknown scenario */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     stream_api_events_stream_get: {
         parameters: {
             query?: never;
@@ -1216,6 +1630,85 @@ export interface operations {
             };
             /** @description Unknown patient */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_catalog_api_replay_catalog_get: {
+        parameters: {
+            query?: {
+                scenario?: string;
+                seed?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayCatalogOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_compare_api_replay_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplayCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayCompareOut"];
+                };
+            };
+            /** @description Unknown patient */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown scenario */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

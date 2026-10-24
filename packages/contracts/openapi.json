@@ -220,6 +220,72 @@
         "title": "AlertsOut",
         "type": "object"
       },
+      "ArchetypeCellOut": {
+        "additionalProperties": false,
+        "properties": {
+          "change_alerts": {
+            "title": "Change Alerts",
+            "type": "integer"
+          },
+          "detected_events": {
+            "title": "Detected Events",
+            "type": "integer"
+          },
+          "false_change_alerts": {
+            "title": "False Change Alerts",
+            "type": "integer"
+          },
+          "labelled_events": {
+            "title": "Labelled Events",
+            "type": "integer"
+          },
+          "patients": {
+            "title": "Patients",
+            "type": "integer"
+          },
+          "workflow_alerts": {
+            "title": "Workflow Alerts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "patients",
+          "labelled_events",
+          "detected_events",
+          "change_alerts",
+          "false_change_alerts",
+          "workflow_alerts"
+        ],
+        "title": "ArchetypeCellOut",
+        "type": "object"
+      },
+      "ArchetypeRowOut": {
+        "additionalProperties": false,
+        "properties": {
+          "archetype": {
+            "title": "Archetype",
+            "type": "string"
+          },
+          "by_detector": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ArchetypeCellOut"
+            },
+            "title": "By Detector",
+            "type": "object"
+          },
+          "patients": {
+            "title": "Patients",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "archetype",
+          "patients",
+          "by_detector"
+        ],
+        "title": "ArchetypeRowOut",
+        "type": "object"
+      },
       "AuditEntryOut": {
         "properties": {
           "action": {
@@ -265,6 +331,318 @@
         "title": "AuditEntryOut",
         "type": "object"
       },
+      "CoverageOut": {
+        "additionalProperties": false,
+        "properties": {
+          "detected": {
+            "title": "Detected",
+            "type": "integer"
+          },
+          "label_type": {
+            "title": "Label Type",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "label_type",
+          "detected",
+          "total"
+        ],
+        "title": "CoverageOut",
+        "type": "object"
+      },
+      "DetectorMetricsOut": {
+        "additionalProperties": false,
+        "properties": {
+          "alerts_by_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Alerts By Type",
+            "type": "object"
+          },
+          "alerts_per_patient_hour": {
+            "title": "Alerts Per Patient Hour",
+            "type": "number"
+          },
+          "change_alerts": {
+            "title": "Change Alerts",
+            "type": "integer"
+          },
+          "confusion": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Confusion",
+            "type": "object"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/CoverageOut"
+            },
+            "title": "Coverage",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detected_events": {
+            "title": "Detected Events",
+            "type": "integer"
+          },
+          "detector": {
+            "title": "Detector",
+            "type": "string"
+          },
+          "deterioration_events": {
+            "title": "Deterioration Events",
+            "type": "integer"
+          },
+          "false_change_alerts": {
+            "title": "False Change Alerts",
+            "type": "integer"
+          },
+          "false_change_alerts_per_patient_hour": {
+            "title": "False Change Alerts Per Patient Hour",
+            "type": "number"
+          },
+          "median_delay_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Delay Seconds"
+          },
+          "precision": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precision"
+          },
+          "recall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall"
+          },
+          "total_alerts": {
+            "title": "Total Alerts",
+            "type": "integer"
+          },
+          "true_change_alerts": {
+            "title": "True Change Alerts",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detector",
+          "version",
+          "description",
+          "deterioration_events",
+          "detected_events",
+          "recall",
+          "change_alerts",
+          "true_change_alerts",
+          "false_change_alerts",
+          "precision",
+          "median_delay_seconds",
+          "false_change_alerts_per_patient_hour",
+          "total_alerts",
+          "alerts_per_patient_hour",
+          "alerts_by_type",
+          "coverage",
+          "confusion"
+        ],
+        "title": "DetectorMetricsOut",
+        "type": "object"
+      },
+      "DetectorReplayOut": {
+        "additionalProperties": false,
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayAlertOut"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detection_delay_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "First observed-change alert inside the first deterioration window minus onset.",
+            "title": "Detection Delay Seconds"
+          },
+          "detector": {
+            "title": "Detector",
+            "type": "string"
+          },
+          "false_change_alerts": {
+            "title": "False Change Alerts",
+            "type": "integer"
+          },
+          "first_alert_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Alert At"
+          },
+          "first_change_alert_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Change Alert At"
+          },
+          "missing_data_handling": {
+            "title": "Missing Data Handling",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detector",
+          "version",
+          "description",
+          "missing_data_handling",
+          "alerts",
+          "first_alert_at",
+          "first_change_alert_at",
+          "detection_delay_seconds",
+          "false_change_alerts"
+        ],
+        "title": "DetectorReplayOut",
+        "type": "object"
+      },
+      "EvaluationOut": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "config_hash": {
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "detectors": {
+            "items": {
+              "$ref": "#/components/schemas/DetectorMetricsOut"
+            },
+            "title": "Detectors",
+            "type": "array"
+          },
+          "disclaimer": {
+            "default": "Synthetic evaluation \u2014 not clinical validation",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "patient_hours": {
+            "title": "Patient Hours",
+            "type": "number"
+          },
+          "patients": {
+            "title": "Patients",
+            "type": "integer"
+          },
+          "per_archetype": {
+            "items": {
+              "$ref": "#/components/schemas/ArchetypeRowOut"
+            },
+            "title": "Per Archetype",
+            "type": "array"
+          },
+          "period_end": {
+            "format": "date-time",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date-time",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "scenario": {
+            "title": "Scenario",
+            "type": "string"
+          },
+          "seeds": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Seeds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "scenario",
+          "seeds",
+          "config_hash",
+          "period_start",
+          "period_end",
+          "patients",
+          "patient_hours",
+          "assumptions",
+          "detectors",
+          "per_archetype"
+        ],
+        "title": "EvaluationOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -300,6 +678,47 @@
           "version"
         ],
         "title": "HealthOut",
+        "type": "object"
+      },
+      "LabelOut": {
+        "additionalProperties": false,
+        "properties": {
+          "archetype": {
+            "title": "Archetype",
+            "type": "string"
+          },
+          "label_type": {
+            "title": "Label Type",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "onset_at": {
+            "format": "date-time",
+            "title": "Onset At",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "window_end": {
+            "format": "date-time",
+            "title": "Window End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "archetype",
+          "label_type",
+          "onset_at",
+          "window_end",
+          "note"
+        ],
+        "title": "LabelOut",
         "type": "object"
       },
       "LatestValue": {
@@ -725,6 +1144,353 @@
           "patients"
         ],
         "title": "PatientsOut",
+        "type": "object"
+      },
+      "ReplayAlertOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_json": {
+            "additionalProperties": true,
+            "title": "Evidence Json",
+            "type": "object"
+          },
+          "false_change_alert": {
+            "title": "False Change Alert",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "in_label_window": {
+            "description": "Inside a scenario label window of a matching type.",
+            "title": "In Label Window",
+            "type": "boolean"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AlertType"
+          },
+          "workflow_urgency": {
+            "$ref": "#/components/schemas/WorkflowUrgency"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "workflow_urgency",
+          "summary",
+          "created_at",
+          "evidence_json",
+          "in_label_window",
+          "false_change_alert"
+        ],
+        "title": "ReplayAlertOut",
+        "type": "object"
+      },
+      "ReplayCatalogOut": {
+        "additionalProperties": false,
+        "properties": {
+          "disclaimer": {
+            "default": "Synthetic evaluation \u2014 not clinical validation",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "patients": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayPatientOut"
+            },
+            "title": "Patients",
+            "type": "array"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "t0": {
+            "format": "date-time",
+            "title": "T0",
+            "type": "string"
+          },
+          "t_end": {
+            "format": "date-time",
+            "title": "T End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "seed",
+          "t0",
+          "t_end",
+          "patients"
+        ],
+        "title": "ReplayCatalogOut",
+        "type": "object"
+      },
+      "ReplayCompareIn": {
+        "additionalProperties": false,
+        "properties": {
+          "patient_id": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "scenario": {
+            "default": "waiting-room-30",
+            "title": "Scenario",
+            "type": "string"
+          },
+          "seed": {
+            "default": 42,
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "patient_id"
+        ],
+        "title": "ReplayCompareIn",
+        "type": "object"
+      },
+      "ReplayCompareOut": {
+        "additionalProperties": false,
+        "properties": {
+          "config_hash": {
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "detectors": {
+            "items": {
+              "$ref": "#/components/schemas/DetectorReplayOut"
+            },
+            "title": "Detectors",
+            "type": "array"
+          },
+          "disclaimer": {
+            "default": "Synthetic evaluation \u2014 not clinical validation",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayObservationOut"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/ReplayPatientOut"
+          },
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayReportOut"
+            },
+            "title": "Reports",
+            "type": "array"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "t0": {
+            "format": "date-time",
+            "title": "T0",
+            "type": "string"
+          },
+          "t_end": {
+            "format": "date-time",
+            "title": "T End",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "seed",
+          "config_hash",
+          "t0",
+          "t_end",
+          "patient",
+          "observations",
+          "reports",
+          "detectors"
+        ],
+        "title": "ReplayCompareOut",
+        "type": "object"
+      },
+      "ReplayObservationOut": {
+        "additionalProperties": false,
+        "properties": {
+          "delivered_at": {
+            "description": "When the reading became available to detectors.",
+            "format": "date-time",
+            "title": "Delivered At",
+            "type": "string"
+          },
+          "deliveries": {
+            "description": "Times delivered; >1 means duplicate deliveries.",
+            "title": "Deliveries",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ObservationKind"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "out_of_order": {
+            "title": "Out Of Order",
+            "type": "boolean"
+          },
+          "quality": {
+            "title": "Quality",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "value",
+          "unit",
+          "observed_at",
+          "delivered_at",
+          "quality",
+          "out_of_order",
+          "deliveries"
+        ],
+        "title": "ReplayObservationOut",
+        "type": "object"
+      },
+      "ReplayPatientOut": {
+        "additionalProperties": false,
+        "properties": {
+          "archetype": {
+            "title": "Archetype",
+            "type": "string"
+          },
+          "arrival_at": {
+            "format": "date-time",
+            "title": "Arrival At",
+            "type": "string"
+          },
+          "complaint": {
+            "title": "Complaint",
+            "type": "string"
+          },
+          "display_code": {
+            "title": "Display Code",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "initial_esi_simulated": {
+            "title": "Initial Esi Simulated",
+            "type": "integer"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/components/schemas/LabelOut"
+            },
+            "title": "Labels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "display_code",
+          "archetype",
+          "complaint",
+          "arrival_at",
+          "initial_esi_simulated",
+          "labels"
+        ],
+        "title": "ReplayPatientOut",
+        "type": "object"
+      },
+      "ReplayReportOut": {
+        "additionalProperties": false,
+        "properties": {
+          "delivered_at": {
+            "format": "date-time",
+            "title": "Delivered At",
+            "type": "string"
+          },
+          "free_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Text"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reported_at": {
+            "format": "date-time",
+            "title": "Reported At",
+            "type": "string"
+          },
+          "structured_tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Structured Tags",
+            "type": "array"
+          },
+          "urgent_help_requested": {
+            "title": "Urgent Help Requested",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "reported_at",
+          "delivered_at",
+          "free_text",
+          "structured_tags",
+          "urgent_help_requested"
+        ],
+        "title": "ReplayReportOut",
         "type": "object"
       },
       "ResetIn": {
@@ -1565,6 +2331,64 @@
         ]
       }
     },
+    "/api/evaluation": {
+      "get": {
+        "operationId": "evaluation_api_evaluation_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scenario",
+            "required": false,
+            "schema": {
+              "default": "waiting-room-30",
+              "title": "Scenario",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated seeds, e.g. 42 or 1,2,3",
+            "in": "query",
+            "name": "seeds",
+            "required": false,
+            "schema": {
+              "default": "42",
+              "description": "Comma-separated seeds, e.g. 42 or 1,2,3",
+              "title": "Seeds",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Unknown scenario"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluation",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
     "/api/events/stream": {
       "get": {
         "operationId": "stream_api_events_stream_get",
@@ -1730,6 +2554,108 @@
         "summary": "Get Timeline",
         "tags": [
           "patients"
+        ]
+      }
+    },
+    "/api/replay/catalog": {
+      "get": {
+        "operationId": "replay_catalog_api_replay_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scenario",
+            "required": false,
+            "schema": {
+              "default": "waiting-room-30",
+              "title": "Scenario",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seed",
+            "required": false,
+            "schema": {
+              "default": 42,
+              "maximum": 2147483647,
+              "minimum": 0,
+              "title": "Seed",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayCatalogOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replay Catalog",
+        "tags": [
+          "evaluation"
+        ]
+      }
+    },
+    "/api/replay/compare": {
+      "post": {
+        "operationId": "replay_compare_api_replay_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplayCompareIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayCompareOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown patient"
+          },
+          "409": {
+            "description": "Unknown scenario"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replay Compare",
+        "tags": [
+          "evaluation"
         ]
       }
     },

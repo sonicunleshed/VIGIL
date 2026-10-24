@@ -21,7 +21,7 @@ export type ChartMarker = { at: string; kind: "symptom" | "alert"; label: string
 
 type DotProps = { cx?: number; cy?: number; payload?: SeriesPoint };
 
-function ObservationDot({ cx, cy, payload }: DotProps) {
+export function ObservationDot({ cx, cy, payload }: DotProps) {
   if (cx == null || cy == null || !payload?.obs) return null;
   const questionable = payload.obs.quality === "questionable";
   return (

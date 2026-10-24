@@ -3,7 +3,7 @@
 import type { ObservationKind, ObservationOut } from "@vigil/contracts";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, UserX } from "lucide-react";
+import { ArrowLeft, History, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EvidencePanel } from "@/components/patients/EvidencePanel";
 import { PatientTimeline } from "@/components/patients/PatientTimeline";
@@ -29,7 +29,7 @@ const LABELS = Object.fromEntries(VITALS.map((v) => [v.kind, v.label]));
 export function PatientDetailView() {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  const { alerts } = useVigil();
+  const { alerts, simulation } = useVigil();
   const { detail, timeline, error, loading } = usePatient(id);
   const [kind, setKind] = useState<ObservationKind>("heart_rate");
   const [range, setRange] = useState<(typeof RANGES)[number]["key"]>("all");
@@ -103,6 +103,12 @@ export function PatientDetailView() {
           </Link>
           <h2 className="font-mono text-xl font-semibold text-fg">{detail.display_code}</h2>
           <StatusBadge status={status} />
+          <Link
+            href={`/insights?patient=${detail.id}${simulation ? `&seed=${simulation.seed}` : ""}`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs text-fg-2 hover:border-fg-3 hover:text-fg"
+          >
+            <History aria-hidden className="size-3.5" /> Replay this patient
+          </Link>
           <dl className="tabular flex flex-wrap gap-x-5 gap-y-1 text-xs">
             <div>
               <dt className="inline text-fg-3">ESI (clinician-assigned, simulated) </dt>

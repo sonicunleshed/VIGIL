@@ -1,6 +1,9 @@
 import type {
   AlertOut,
   AlertsOut,
+  EvaluationOut,
+  ReplayCatalogOut,
+  ReplayCompareOut,
   HealthOut,
   PatientDetail,
   PatientsOut,
@@ -65,6 +68,10 @@ export const api = {
   pause: () => post<SimulationStateOut>("/api/simulation/pause"),
   step: (minutes: number) => post<StepResult>("/api/simulation/step", { minutes }),
   reset: (seed: number) => post<SimulationStateOut>("/api/simulation/reset", { seed }),
+  replayCatalog: (seed: number) => request<ReplayCatalogOut>(`/api/replay/catalog?seed=${seed}`),
+  replayCompare: (seed: number, patientId: string) =>
+    post<ReplayCompareOut>("/api/replay/compare", { seed, patient_id: patientId }),
+  evaluation: (seeds: number[]) => request<EvaluationOut>(`/api/evaluation?seeds=${seeds.join(",")}`),
 };
 
 export function streamUrl(): string {

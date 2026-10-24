@@ -1,47 +1,27 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  Bell,
-  ChartColumn,
-  ClipboardList,
-  FlaskConical,
-  History,
-  LayoutDashboard,
-  Users,
-} from "lucide-react";
+import { ChartColumn, LayoutDashboard } from "lucide-react";
 
-export type NavItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  /** Not built yet: rendered as a disabled "Planned" entry, never as a working link. */
-  planned?: boolean;
-};
-
+export type NavItem = { href: string; label: string; icon: LucideIcon };
 export type NavSection = { title: string; items: NavItem[] };
 
+/** Only routes that exist. Unbuilt screens are not advertised. */
 export const NAV: NavSection[] = [
-  {
-    title: "Operations",
-    items: [
-      { href: "/", label: "Overview", icon: LayoutDashboard },
-      { href: "/patients", label: "Patients", icon: Users, planned: true },
-      { href: "/alerts", label: "Alerts", icon: Bell, planned: true },
-      { href: "/reassessment", label: "Reassessment", icon: ClipboardList, planned: true },
-    ],
-  },
+  { title: "Operations", items: [{ href: "/", label: "Overview", icon: LayoutDashboard }] },
   {
     title: "Intelligence",
-    items: [
-      { href: "/simulation", label: "Simulation Lab", icon: FlaskConical, planned: true },
-      { href: "/replay", label: "Replay", icon: History, planned: true },
-      { href: "/analytics", label: "Analytics", icon: ChartColumn, planned: true },
-    ],
+    items: [{ href: "/insights", label: "Insights & Replay", icon: ChartColumn }],
   },
 ];
 
 export function pageMeta(pathname: string): { title: string; subtitle: string } {
   if (pathname.startsWith("/patients/")) {
     return { title: "Patient detail", subtitle: "Longitudinal observations since triage" };
+  }
+  if (pathname.startsWith("/insights")) {
+    return {
+      title: "Insights & Replay",
+      subtitle: "Three monitoring strategies on the same synthetic event stream",
+    };
   }
   return { title: "Emergency Department", subtitle: "Live monitoring overview" };
 }

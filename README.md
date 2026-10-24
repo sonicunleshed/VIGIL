@@ -17,8 +17,8 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | 1 | Models, migrations, seeded scenarios, ingestion, CRUD, SSE | ✅ done |
 | 2 | Nurse console: app shell, Overview, Patient detail (UI spec P0) | ✅ done |
 | 3 | Threshold / trend / hybrid detectors; hybrid drives live alerts | ✅ done |
-| 4 | Live stream + review workflow integration | — |
-| 5 | Replay + evaluation | — |
+| 4 | Live stream + review workflow integration | ✅ done |
+| 5 | Counterfactual replay + evaluation (Insights & Replay screen) | ✅ done |
 
 ## Quick start
 
@@ -85,7 +85,11 @@ docs/                  Architecture, safety, evaluation, demo
 | GET | `/api/scenarios`, `/api/simulation` | |
 | POST | `/api/simulation/reset` · `start` · `pause` · `step` | Deterministic clock control |
 
-Interactive docs: http://localhost:8000/docs. Evaluation and replay endpoints arrive in Phase 5.
+| GET | `/api/replay/catalog?seed=` | Patients and scenario labels for a seed |
+| POST | `/api/replay/compare` | One patient's trajectory through all three detectors |
+| GET | `/api/evaluation?seeds=1,2,3` | Metrics with denominators; recorded in `detector_runs` |
+
+Interactive docs: http://localhost:8000/docs. See [docs/EVALUATION.md](docs/EVALUATION.md) for definitions and a held-out snapshot.
 
 ## Limitations
 

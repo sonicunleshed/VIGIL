@@ -22,6 +22,16 @@ export type StepResult = Schemas["StepResult"];
 export type ScenariosOut = Schemas["ScenariosOut"];
 export type HealthOut = Schemas["HealthOut"];
 export type ObservationKind = Schemas["ObservationKind"];
+export type LabelOut = Schemas["LabelOut"];
+export type ReplayCatalogOut = Schemas["ReplayCatalogOut"];
+export type ReplayPatientOut = Schemas["ReplayPatientOut"];
+export type ReplayCompareOut = Schemas["ReplayCompareOut"];
+export type DetectorReplayOut = Schemas["DetectorReplayOut"];
+export type ReplayAlertOut = Schemas["ReplayAlertOut"];
+export type ReplayObservationOut = Schemas["ReplayObservationOut"];
+export type EvaluationOut = Schemas["EvaluationOut"];
+export type DetectorMetricsOut = Schemas["DetectorMetricsOut"];
+export type ArchetypeRowOut = Schemas["ArchetypeRowOut"];
 
 /** Server-sent event names emitted by GET /api/events/stream. */
 export type StreamEventType =

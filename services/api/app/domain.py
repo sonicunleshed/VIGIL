@@ -1,0 +1,100 @@
+"""Shared vocabulary: observation kinds, units, enumerations.
+
+The bounds below are INPUT PLAUSIBILITY CHECKS for software validation (reject
+typos and impossible values). They are not clinical thresholds and play no part
+in deciding whether a patient needs reassessment.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class ObservationKind(StrEnum):
+    HEART_RATE = "heart_rate"
+    RESP_RATE = "resp_rate"
+    SPO2 = "spo2"
+    SBP = "sbp"
+    TEMP = "temp"
+
+
+@dataclass(frozen=True)
+class KindSpec:
+    unit: str
+    min_value: float
+    max_value: float
+    label: str
+
+
+KIND_SPECS: dict[ObservationKind, KindSpec] = {
+    ObservationKind.HEART_RATE: KindSpec("bpm", 0, 300, "Heart rate"),
+    ObservationKind.RESP_RATE: KindSpec("breaths/min", 0, 80, "Respiratory rate"),
+    ObservationKind.SPO2: KindSpec("%", 0, 100, "SpO2"),
+    ObservationKind.SBP: KindSpec("mmHg", 0, 300, "Systolic BP"),
+    ObservationKind.TEMP: KindSpec("degC", 25, 45, "Temperature"),
+}
+
+
+class ObservationQuality(StrEnum):
+    GOOD = "good"
+    QUESTIONABLE = "questionable"
+
+
+class EventType(StrEnum):
+    OBSERVATION = "observation"
+    SYMPTOM_REPORT = "symptom_report"
+
+
+class WorkflowStatus(StrEnum):
+    WAITING = "waiting"
+    UNDER_REVIEW = "under_review"
+    ROOMED = "roomed"
+
+
+class AlertType(StrEnum):
+    OBSERVED_CHANGE = "OBSERVED_CHANGE"
+    PATIENT_REPORT = "PATIENT_REPORT"
+    DATA_STALE = "DATA_STALE"
+    DATA_QUALITY = "DATA_QUALITY"
+
+
+class AlertStatus(StrEnum):
+    OPEN = "open"
+    ACKNOWLEDGED = "acknowledged"
+    RESOLVED = "resolved"
+
+
+class WorkflowUrgency(StrEnum):
+    """Workflow label for how soon a nurse should look. NOT clinical acuity."""
+
+    ROUTINE = "routine"
+    REVIEW = "review"
+    PROMPT_REVIEW = "prompt_review"
+
+
+class AlertActionKind(StrEnum):
+    ACKNOWLEDGE = "acknowledge"
+    RESOLVE = "resolve"
+
+
+class SimulationStatus(StrEnum):
+    IDLE = "idle"
+    RUNNING = "running"
+    PAUSED = "paused"
+    FINISHED = "finished"
+
+
+SYMPTOM_TAGS: frozenset[str] = frozenset(
+    {
+        "pain_worse",
+        "breathing_harder",
+        "feeling_faint",
+        "new_confusion",
+        "chest_discomfort",
+        "bleeding",
+        "nausea_vomiting",
+        "feeling_better",
+        "other",
+    }
+)

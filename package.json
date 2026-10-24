@@ -1,0 +1,22 @@
+{
+  "name": "vigil",
+  "private": true,
+  "description": "VIGIL — synthetic-data ED waiting-room reassessment research demo. NOT FOR CLINICAL USE.",
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "bootstrap": "pnpm install && uv sync --project services/api",
+    "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm --filter web dev\"",
+    "dev:api": "cd services/api && uv run uvicorn app.main:app --port 8000 --reload --reload-dir app",
+    "test": "pnpm test:api && pnpm --filter web test",
+    "test:api": "cd services/api && uv run pytest",
+    "lint": "pnpm lint:api && pnpm --filter web lint",
+    "lint:api": "cd services/api && uv run ruff check . && uv run ruff format --check . && uv run mypy app",
+    "typecheck": "pnpm --filter web typecheck && pnpm --filter @vigil/contracts typecheck",
+    "contracts:gen": "pnpm --filter @vigil/contracts gen",
+    "contracts:check": "pnpm --filter @vigil/contracts check",
+    "scenario:gen": "cd services/api && uv run python -m app.simulator.generator --seed 42 --out ../../data/scenarios/waiting-room-30.seed-42.json"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

@@ -1,2 +1,93 @@
 # VIGIL
-VIGIL is an AI-powered emergency department monitoring system that detects patient deterioration over time, generates explainable reassessment alerts, and helps nurses identify patients who may need urgent attention.
+
+> **SIMULATION / NOT FOR CLINICAL USE.** Synthetic-data research prototype. Not a medical device,
+> clinical decision system, or deployment-ready hospital product.
+
+VIGIL detects **changes after initial triage** and helps clinicians decide which waiting-room
+patients may need reassessment. It is not an autonomous triage engine: it never assigns ESI,
+diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every decision.
+
+*"Triage captures a moment. VIGIL notices when that picture changes."*
+
+## Status
+
+| Phase | Scope | State |
+|---|---|---|
+| 0 | Monorepo, contracts, app boot | ✅ done |
+| 1 | Models, migrations, seeded scenarios, ingestion, CRUD, SSE | ✅ done |
+| 2 | Dashboard, patient detail, charts | next |
+| 3 | Threshold / trend / hybrid detectors | — |
+| 4 | Live stream + review workflow integration | — |
+| 5 | Replay + evaluation | — |
+
+## Quick start
+
+Requirements: Python 3.12+ via [uv](https://docs.astral.sh/uv/), Node 20+ and pnpm 9.
+
+```bash
+pnpm bootstrap   # pnpm install + uv sync
+pnpm dev         # API on :8000, web on :3000
+```
+
+Open http://localhost:3000. On first start the API migrates its SQLite DB
+(`services/api/var/vigil.db`) and loads scenario `waiting-room-30` with seed 42: 30 synthetic
+patients already waiting, with their triage vitals as history.
+
+Run one uvicorn worker only: the SSE broker is in-process.
+
+## Checks
+
+```bash
+pnpm test              # pytest (API) + vitest (web)
+pnpm lint              # ruff + mypy --strict + eslint
+pnpm typecheck         # tsc for web and contracts
+pnpm contracts:check   # OpenAPI → TS types are up to date
+```
+
+## Architecture
+
+```
+ Next.js (apps/web) ──REST──▶ FastAPI (services/api) ──▶ SQLite (Alembic migrations)
+        ▲                        │  ingest (idempotent) ─▶ events (immutable) ─▶ observations / reports
+        └──────── SSE ───────────┤  simulation clock ─▶ scheduled scenario deliveries
+                                 └─ detectors (Phase 3) ─▶ alerts ─▶ clinician actions ─▶ audit log
+```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SAFETY.md](docs/SAFETY.md),
+[docs/EVALUATION.md](docs/EVALUATION.md) and [docs/DEMO.md](docs/DEMO.md).
+
+## Repository
+
+```
+apps/web/              Next.js nurse console (App Router, TypeScript, Tailwind)
+services/api/          FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, pytest
+  app/{api,models,schemas,services,simulator,detectors}/
+packages/contracts/    OpenAPI document + generated TypeScript types
+data/scenarios/        Committed seed-42 fixture (regenerate: pnpm scenario:gen)
+docs/                  Architecture, safety, evaluation, demo
+```
+
+## API (Phase 1)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/health` | |
+| GET | `/api/patients` | Snapshot; latest value per kind by `observed_at`, `null` = never observed |
+| GET | `/api/patients/{id}` | Detail + symptom reports |
+| GET | `/api/patients/{id}/timeline` | Observations, reports, alerts, actions sorted by time then id |
+| POST | `/api/observations` | 201 created · 200 duplicate · 409 id reused with different payload · 422 invalid |
+| POST | `/api/symptom-reports` | Same idempotency rules; `reported_at` defaults to sim clock |
+| GET | `/api/alerts?status=&type=&patient_id=` | |
+| POST | `/api/alerts/{id}/acknowledge` · `/resolve` | Body `{actor_id, note?}`; demo actors only |
+| GET | `/api/audit` | Append-only audit trail |
+| GET | `/api/events/stream` | SSE: `hello`, `observation`, `symptom_report`, `alert_updated`, `simulation`, `reset`, `resync` |
+| GET | `/api/scenarios`, `/api/simulation` | |
+| POST | `/api/simulation/reset` · `start` · `pause` · `step` | Deterministic clock control |
+
+Interactive docs: http://localhost:8000/docs. Evaluation and replay endpoints arrive in Phase 5.
+
+## Limitations
+
+- Synthetic data only; "ground truth" labels are scenario-author intent, not clinical outcomes.
+- No authentication beyond fixed demo actor IDs; no PHI support; single-process server.
+- No detector is implemented yet, so no alerts are generated in Phase 1.

@@ -1,0 +1,27 @@
+# deps
+node_modules/
+.pnpm-store/
+services/api/.venv/
+
+# build / caches
+.next/
+out/
+*.tsbuildinfo
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# local runtime data (SQLite demo DB)
+services/api/var/
+*.db
+*.db-wal
+*.db-shm
+
+# env / local tooling
+.env
+.env.*
+!.env.example
+.DS_Store
+.claude/launch.json
+.claude/settings.local.json

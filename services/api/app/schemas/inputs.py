@@ -1,0 +1,97 @@
+"""Request bodies. Validation errors surface as 422 with field-level detail."""
+
+from __future__ import annotations
+
+from typing import Annotated, Any, Literal
+from uuid import UUID
+
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+
+from app.domain import KIND_SPECS, SYMPTOM_TAGS, ObservationKind, ObservationQuality
+
+Source = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[a-z0-9][a-z0-9_.:-]*$")]
+PatientId = Annotated[str, Field(min_length=1, max_length=16)]
+ActorId = Annotated[str, Field(min_length=3, max_length=40, pattern=r"^[a-z0-9-]+$")]
+
+
+class _Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
+
+class ObservationIn(_Strict):
+    """A single measurement. `event_id` is client-assigned so retries are idempotent."""
+
+    event_id: UUID
+    patient_id: PatientId
+    observed_at: AwareDatetime
+    kind: ObservationKind
+    value: float
+    unit: str = Field(min_length=1, max_length=16)
+    source: Source
+    quality: ObservationQuality = ObservationQuality.GOOD
+    scenario_id: str | None = Field(default=None, max_length=80)
+
+    @model_validator(mode="after")
+    def _unit_and_bounds(self) -> ObservationIn:
+        spec = KIND_SPECS[self.kind]
+        if self.unit != spec.unit:
+            raise ValueError(f"unit for {self.kind} must be '{spec.unit}', got '{self.unit}'")
+        if not spec.min_value <= self.value <= spec.max_value:
+            raise ValueError(
+                f"{self.kind} value {self.value} outside input plausibility bounds "
+                f"[{spec.min_value}, {spec.max_value}] (software validation, not a clinical limit)"
+            )
+        return self
+
+
+class SymptomReportIn(_Strict):
+    """Patient-reported change. `reported_at` defaults to the simulation clock."""
+
+    event_id: UUID
+    patient_id: PatientId
+    reported_at: AwareDatetime | None = None
+    free_text: str | None = Field(default=None, max_length=1000)
+    structured_tags: list[str] = Field(default_factory=list, max_length=len(SYMPTOM_TAGS))
+    urgent_help_requested: bool = False
+    source: Source
+    scenario_id: str | None = Field(default=None, max_length=80)
+
+    @model_validator(mode="after")
+    def _content(self) -> SymptomReportIn:
+        unknown = set(self.structured_tags) - SYMPTOM_TAGS
+        if unknown:
+            raise ValueError(f"unknown structured_tags: {sorted(unknown)}")
+        if len(set(self.structured_tags)) != len(self.structured_tags):
+            raise ValueError("structured_tags must be unique")
+        if self.free_text is not None:
+            self.free_text = self.free_text.strip() or None
+        if not (self.free_text or self.structured_tags or self.urgent_help_requested):
+            raise ValueError("report needs free_text, structured_tags or urgent_help_requested")
+        return self
+
+
+class ScenarioEnvelope(BaseModel):
+    """How a scheduled scenario delivery is stored: an event type plus its request body."""
+
+    event_type: Literal["observation", "symptom_report"]
+    body: dict[str, Any]
+
+
+class AlertActionIn(_Strict):
+    actor_id: ActorId = Field(description="Local demo actor; production auth is out of scope.")
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class ResetIn(_Strict):
+    scenario: str = "waiting-room-30"
+    seed: int = Field(default=42, ge=0, le=2**31 - 1)
+
+
+class StartIn(_Strict):
+    speed: float = Field(
+        default=10.0, gt=0, le=600, description="Simulated seconds per wall second"
+    )
+
+
+class StepIn(_Strict):
+    minutes: float = Field(default=5.0, gt=0, le=240)

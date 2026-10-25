@@ -8,8 +8,11 @@ from app.explain.context import ExplanationContext, Section
 
 # The only workflow wording any provider may show. The guard overwrites provider text with this.
 WORKFLOW_TEXT = {
-    "alert": "Request clinical reassessment. VIGIL does not suggest treatment or change ESI.",
-    "patient_open": "Open review requests exist for this patient. See Attention Needed.",
+    "alert": (
+        "Advisory only: a clinician decides whether and how to reassess."
+        " VIGIL does not suggest treatment or change ESI."
+    ),
+    "patient_open": "Open review requests exist for this patient. See Reassessment Requests.",
     "patient_none": (
         "No open review requests. Absence of alerts does not mean the patient is stable."
     ),

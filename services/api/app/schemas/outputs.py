@@ -288,7 +288,11 @@ class PatientSeriesOut(_Out):
 
 class ActivityOut(_Out):
     key: str
-    at: datetime
+    at: datetime = Field(description="When it happened: observed/reported time, or action time.")
+    received_at: datetime = Field(description="When VIGIL received it (simulation clock).")
+    late: bool = Field(
+        description="Arrived after a later-timestamped event of the same stream (out of order)."
+    )
     kind: Literal["vitals", "symptom_report", "camera", "alert", "alert_action"]
     patient_id: str
     display_code: str

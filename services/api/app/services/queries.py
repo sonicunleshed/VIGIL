@@ -212,9 +212,9 @@ _SHORT = {
     "temp": "Temp",
 }
 _ACTION_TITLE = {
-    "acknowledge": "Alert acknowledged",
+    "acknowledge": "Request acknowledged",
     "begin_reassessment": "Reassessment started",
-    "resolve": "Review documented",
+    "resolve": "Outcome documented",
 }
 
 
@@ -234,6 +234,7 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
             select(Observation).where(Observation.id.in_([e.event_id for e in events]))
         )
     }
+    by_id = {e.event_id: e for e in events}
     rounds: dict[tuple[str, datetime], list[Observation]] = {}
     for e in events:
         if e.event_type == "observation" and e.event_id in obs:
@@ -245,6 +246,8 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
                 ActivityOut(
                     key=f"rep-{e.event_id}",
                     at=e.occurred_at,
+                    received_at=e.ingested_at,
+                    late=e.out_of_order,
                     kind="symptom_report",
                     patient_id=e.patient_id,
                     display_code=codes.get(e.patient_id, e.patient_id),
@@ -258,6 +261,8 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
                 ActivityOut(
                     key=f"cam-{e.event_id}",
                     at=e.occurred_at,
+                    received_at=e.ingested_at,
+                    late=e.out_of_order,
                     kind="camera",
                     patient_id=e.patient_id,
                     display_code=codes.get(e.patient_id, e.patient_id),
@@ -272,10 +277,12 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
             ActivityOut(
                 key=f"vit-{pid}-{at.isoformat()}",
                 at=at,
+                received_at=max(by_id[o.id].ingested_at for o in group),
+                late=any(by_id[o.id].out_of_order for o in group),
                 kind="vitals",
                 patient_id=pid,
                 display_code=codes.get(pid, pid),
-                title="Vitals recorded",
+                title="Vitals observed",
                 detail=" · ".join(_vital_text(o.kind, o.value, o.unit) for o in group),
                 ref_id=group[0].id,
             )
@@ -285,10 +292,12 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
             ActivityOut(
                 key=f"alert-{a.id}",
                 at=a.created_at,
+                received_at=a.created_at,
+                late=False,
                 kind="alert",
                 patient_id=a.patient_id,
                 display_code=codes.get(a.patient_id, a.patient_id),
-                title="Attention needed",
+                title="Reassessment requested",
                 detail=a.summary,
                 ref_id=a.id,
             )
@@ -305,6 +314,8 @@ def activity(db: Session, limit: int) -> list[ActivityOut]:
             ActivityOut(
                 key=f"act-{act.id}",
                 at=act.timestamp,
+                received_at=act.timestamp,
+                late=False,
                 kind="alert_action",
                 patient_id=pid,
                 display_code=codes.get(pid, pid),

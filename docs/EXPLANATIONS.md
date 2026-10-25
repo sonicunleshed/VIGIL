@@ -25,7 +25,7 @@ note when the configured provider was bypassed.
     { "kind": "what_changed", "text": "…", "citations": ["<event id>", "…"] },
     { "kind": "evidence", "text": "HR 96 bpm at 15:25", "citations": ["<event id>"] },
     { "kind": "what_is_missing", "text": "Never recorded: Temp.", "citations": [] },
-    { "kind": "suggested_workflow", "text": "Request clinical reassessment. …", "citations": [] }
+    { "kind": "suggested_workflow", "text": "Advisory only: a clinician decides …", "citations": [] }
   ],
   "cited_facts": { "<event id>": "HR 96 bpm at 15:25" }
 }

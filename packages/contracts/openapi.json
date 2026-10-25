@@ -26,6 +26,7 @@
       "ActivityOut": {
         "properties": {
           "at": {
+            "description": "When it happened: observed/reported time, or action time.",
             "format": "date-time",
             "title": "At",
             "type": "string"
@@ -53,8 +54,19 @@
             "title": "Kind",
             "type": "string"
           },
+          "late": {
+            "description": "Arrived after a later-timestamped event of the same stream (out of order).",
+            "title": "Late",
+            "type": "boolean"
+          },
           "patient_id": {
             "title": "Patient Id",
+            "type": "string"
+          },
+          "received_at": {
+            "description": "When VIGIL received it (simulation clock).",
+            "format": "date-time",
+            "title": "Received At",
             "type": "string"
           },
           "ref_id": {
@@ -69,6 +81,8 @@
         "required": [
           "key",
           "at",
+          "received_at",
+          "late",
           "kind",
           "patient_id",
           "display_code",

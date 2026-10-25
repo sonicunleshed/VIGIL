@@ -520,6 +520,7 @@ export interface components {
             /**
              * At
              * Format: date-time
+             * @description When it happened: observed/reported time, or action time.
              */
             at: string;
             /** Detail */
@@ -533,8 +534,19 @@ export interface components {
              * @enum {string}
              */
             kind: "vitals" | "symptom_report" | "camera" | "alert" | "alert_action";
+            /**
+             * Late
+             * @description Arrived after a later-timestamped event of the same stream (out of order).
+             */
+            late: boolean;
             /** Patient Id */
             patient_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             * @description When VIGIL received it (simulation clock).
+             */
+            received_at: string;
             /** Ref Id */
             ref_id: string;
             /** Title */

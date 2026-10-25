@@ -14,7 +14,7 @@ from app.explain.context import ExplanationContext, Fact, Section
 from app.explain.guard import GuardError, check
 from app.explain.providers import WORKFLOW_TEXT
 from app.services import alerts
-from tests.conftest import new_id
+from tests.conftest import new_id, obs_body
 
 ACTOR = {"actor_id": "nurse-demo-1"}
 
@@ -113,6 +113,19 @@ def test_activity_groups_vital_rounds_and_includes_reviews(client: TestClient) -
     assert " · " in vitals["detail"] and vitals["display_code"].startswith("WR-")
     keys = [(i["at"], i["key"]) for i in items]
     assert keys == sorted(keys, reverse=True)
+
+
+def test_activity_marks_late_deliveries_with_arrival_time(client: TestClient) -> None:
+    newer = obs_body(observed_at="2026-01-15T13:59:30Z", value=95)
+    older = obs_body(observed_at="2026-01-15T13:59:10Z", value=70)
+    client.post("/api/observations", json=newer)
+    client.post("/api/observations", json=older)
+    items = client.get("/api/activity?limit=50").json()["items"]
+    by_at = {i["at"]: i for i in items if i["kind"] == "vitals" and i["patient_id"] == "P001"}
+    late = by_at["2026-01-15T13:59:10Z"]
+    assert late["late"] is True
+    assert late["received_at"] >= late["at"]
+    assert by_at["2026-01-15T13:59:30Z"]["late"] is False
 
 
 # -- explanations ---------------------------------------------------------------------------

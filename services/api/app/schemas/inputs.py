@@ -155,3 +155,14 @@ class VisionEventIn(_Strict):
 
 class VisionStopIn(_Strict):
     reason: str | None = Field(default=None, max_length=40)
+
+
+class CheckinTokenIn(_Strict):
+    """Staff create a check-in code for one patient. A new code replaces the patient's old one."""
+
+    patient_id: PatientId
+    actor_id: ActorId
+
+
+class CheckinRevokeIn(_Strict):
+    actor_id: ActorId

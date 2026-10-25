@@ -45,6 +45,10 @@ export type SeriesPointOut = Schemas["SeriesPointOut"];
 export type ActivityOut = Schemas["ActivityOut"];
 export type ActivityFeedOut = Schemas["ActivityFeedOut"];
 export type ReassessmentOutcome = Schemas["ReassessmentOutcome"];
+export type CheckinTokenOut = Schemas["CheckinTokenOut"];
+export type CheckinTokenCreatedOut = Schemas["CheckinTokenCreatedOut"];
+export type CheckinSessionOut = Schemas["CheckinSessionOut"];
+export type SymptomReportIngestResult = Schemas["SymptomReportIngestResult"];
 
 /** Server-sent event names emitted by GET /api/events/stream. */
 export type StreamEventType =

@@ -15,7 +15,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __doc__ as app_doc
-from app.api import alerts, evaluation, ingest, patients, simulation, stream, vision
+from app.api import alerts, checkin, evaluation, ingest, patients, simulation, stream, vision
 from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory, run_migrations, write_lock
 from app.errors import DomainError
@@ -74,7 +74,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-Vision-Token"],
+        allow_headers=["Content-Type", "X-Vision-Token", "X-Checkin-Token"],
     )
 
     @app.exception_handler(RequestValidationError)
@@ -98,7 +98,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def health() -> HealthOut:
         return HealthOut(status="ok", version=VERSION)
 
-    for module in (patients, ingest, alerts, simulation, stream, evaluation, vision):
+    for module in (patients, ingest, alerts, simulation, stream, evaluation, vision, checkin):
         app.include_router(module.router)
     return app
 

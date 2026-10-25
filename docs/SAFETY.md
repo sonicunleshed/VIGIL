@@ -31,6 +31,9 @@ are scenario-author intent.
 - Validation error responses omit submitted values.
 - No external analytics or logging of payloads; logs contain ids and counts only.
 - No production PHI support; no external network calls at runtime (fonts are bundled locally).
+- Patient check-in codes travel in the URL fragment and the `X-Checkin-Token` header, never in a
+  query string or log line; the server stores only their SHA-256. The phone page shows only that
+  patient's display code.
 
 ## Known risks (tracked)
 
@@ -42,3 +45,6 @@ are scenario-author intent.
 | Late data read as new change | Activity marks out-of-order deliveries with their arrival time |
 | Stale data | Explicit ages and unknown states; separate reminder type |
 | Reproducibility | Seeded generator, UUIDv5 ids, sim clock, fixture equality test |
+| Phone check-in relied on instead of staff | The page always says to tell staff if the patient feels much worse, confirms only what was sent, and never reassures or mentions priority |
+| Reminder answers read as status | "Nothing new" never leaves the phone and an ignored reminder raises nothing, so silence or "nothing new" can never appear to staff as "stable"; sound is off by default in a shared waiting room |
+| Check-in spam or a shared code | One active code per patient, server-side patient match, 4 reports per 5 min per code, staff can cancel a code; every report is labelled "sent from patient's phone" |

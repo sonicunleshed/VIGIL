@@ -161,6 +161,22 @@ class VisionEvent(Base):
     __table_args__ = (Index("ix_vision_events_patient_time", "patient_id", "observed_at"),)
 
 
+class CheckinToken(Base):
+    """Staff-issued code that lets one patient send symptom reports from their own phone."""
+
+    __tablename__ = "checkin_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    patient_id: Mapped[str] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    issued_by: Mapped[str] = mapped_column(String(40))
+    issued_at: Mapped[datetime] = mapped_column(UTCDateTime)  # simulation clock
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime)  # simulation clock
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    revoked_by: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    revoke_reason: Mapped[str | None] = mapped_column(String(16), nullable=True)
+
+
 class Alert(Base):
     __tablename__ = "alerts"
 

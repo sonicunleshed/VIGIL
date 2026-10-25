@@ -126,6 +126,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/checkin/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Session
+         * @description The phone polls this: it also learns the simulation clock and when to remind the patient.
+         */
+        get: operations["session_api_checkin_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkin/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tokens */
+        get: operations["list_tokens_api_checkin_tokens_get"];
+        put?: never;
+        /** Create Token */
+        post: operations["create_token_api_checkin_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkin/tokens/{token_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Token */
+        post: operations["revoke_token_api_checkin_tokens__token_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/evaluation": {
         parameters: {
             query?: never;
@@ -407,7 +462,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Symptom Report */
+        /**
+         * Post Symptom Report
+         * @description Send `X-Checkin-Token` when the report comes from the patient's check-in page.
+         */
         post: operations["post_symptom_report_api_symptom_reports_post"];
         delete?: never;
         options?: never;
@@ -691,6 +749,115 @@ export interface components {
             /** Id */
             id: number;
         };
+        /** CheckinRevokeIn */
+        CheckinRevokeIn: {
+            /** Actor Id */
+            actor_id: string;
+        };
+        /**
+         * CheckinSessionOut
+         * @description What the patient's phone needs to send a report with its check-in code.
+         */
+        CheckinSessionOut: {
+            /** Display Code */
+            display_code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Now
+             * Format: date-time
+             * @description Simulation clock; the phone times reminders against it.
+             */
+            now: string;
+            /** Patient Id */
+            patient_id: string;
+            /**
+             * Remind At
+             * Format: date-time
+             * @description When the page next asks whether anything changed: the code's creation or the patient's latest check-in report under it, plus `remind_every_minutes`.
+             */
+            remind_at: string;
+            /** Remind Every Minutes */
+            remind_every_minutes: number;
+            /**
+             * Structured Tags
+             * @description Tags a report may carry, sorted.
+             */
+            structured_tags: string[];
+        };
+        /** CheckinTokenCreatedOut */
+        CheckinTokenCreatedOut: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Issued By */
+            issued_by: string;
+            /** Patient Id */
+            patient_id: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Revoked By */
+            revoked_by: string | null;
+            /** @description Evaluated at the simulation clock. */
+            status: components["schemas"]["CheckinTokenStatus"];
+            /**
+             * Token
+             * @description Shown once. Send as the X-Checkin-Token header.
+             */
+            token: string;
+        };
+        /**
+         * CheckinTokenIn
+         * @description Staff create a check-in code for one patient. A new code replaces the patient's old one.
+         */
+        CheckinTokenIn: {
+            /** Actor Id */
+            actor_id: string;
+            /** Patient Id */
+            patient_id: string;
+        };
+        /** CheckinTokenOut */
+        CheckinTokenOut: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Issued By */
+            issued_by: string;
+            /** Patient Id */
+            patient_id: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Revoked By */
+            revoked_by: string | null;
+            /** @description Evaluated at the simulation clock. */
+            status: components["schemas"]["CheckinTokenStatus"];
+        };
+        /**
+         * CheckinTokenStatus
+         * @enum {string}
+         */
+        CheckinTokenStatus: "active" | "expired" | "revoked" | "replaced";
         /** CoverageOut */
         CoverageOut: {
             /** Detected */
@@ -2068,6 +2235,172 @@ export interface operations {
             };
         };
     };
+    session_api_checkin_session_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Checkin-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinSessionOut"];
+                };
+            };
+            /** @description Missing, unknown, revoked, replaced or expired code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tokens_api_checkin_tokens_get: {
+        parameters: {
+            query?: {
+                patient_id?: string | null;
+                active?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinTokenOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_token_api_checkin_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinTokenCreatedOut"];
+                };
+            };
+            /** @description Unknown demo actor */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown patient */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_token_api_checkin_tokens__token_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckinRevokeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckinTokenOut"];
+                };
+            };
+            /** @description Unknown demo actor */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown code */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     evaluation_api_evaluation_get: {
         parameters: {
             query?: {
@@ -2606,7 +2939,9 @@ export interface operations {
     post_symptom_report_api_symptom_reports_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-Checkin-Token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2632,6 +2967,20 @@ export interface operations {
                     "application/json": components["schemas"]["SymptomReportIngestResult"];
                 };
             };
+            /** @description Check-in code not active, or `patient_checkin` source without one */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Check-in code belongs to a different patient */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Unknown patient */
             404: {
                 headers: {
@@ -2648,6 +2997,13 @@ export interface operations {
             };
             /** @description Schema, unit, bounds or timestamp validation failed */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many reports from this check-in code */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

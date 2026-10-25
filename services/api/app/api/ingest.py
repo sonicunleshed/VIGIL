@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Response, status
 
+from app.api.checkin import CheckinTokenHeader
 from app.api.deps import DbDep, RuntimeDep
 from app.db import write_lock
 from app.detectors import engine
@@ -14,7 +17,7 @@ from app.schemas.outputs import (
     SymptomReportIngestResult,
     SymptomReportOut,
 )
-from app.services import simulation
+from app.services import checkin, simulation
 from app.services.ingest import ingest_observation, ingest_symptom_report
 from app.services.simulation import AdvanceResult
 
@@ -58,13 +61,27 @@ def post_observation(
     "/symptom-reports",
     response_model=SymptomReportIngestResult,
     status_code=status.HTTP_201_CREATED,
-    responses=_RESPONSES,
+    responses={
+        **_RESPONSES,
+        401: {"description": "Check-in code not active, or `patient_checkin` source without one"},
+        403: {"description": "Check-in code belongs to a different patient"},
+        429: {"description": "Too many reports from this check-in code"},
+    },
 )
 def post_symptom_report(
-    body: SymptomReportIn, db: DbDep, runtime: RuntimeDep, response: Response
+    body: SymptomReportIn,
+    db: DbDep,
+    runtime: RuntimeDep,
+    response: Response,
+    checkin_token: CheckinTokenHeader = None,
 ) -> SymptomReportIngestResult:
+    """Send `X-Checkin-Token` when the report comes from the patient's check-in page."""
     with write_lock:
         now = simulation.clock(db)
+        code = checkin.authorize(db, checkin_token, now) if checkin_token is not None else None
+        checkin.check_report(body, code)
+        if code is not None:
+            runtime.checkin_limiter.check(code.id, time.monotonic())
         outcome = ingest_symptom_report(db, body, now, runtime.settings.future_tolerance_seconds)
         new_alerts = engine.process(db, outcome, now)
         db.commit()

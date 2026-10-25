@@ -28,6 +28,8 @@ class Runtime:
         self.session_factory = session_factory
         self.broker = Broker()
         self.vision_limiter = RateLimiter()
+        # Wall-clock limit on one patient's check-in code, so a stuck button cannot flood review.
+        self.checkin_limiter = RateLimiter(4, 300.0, "reports per 5 minutes from this code")
         self._task: asyncio.Task[None] | None = None
 
     # -- publishing -------------------------------------------------------

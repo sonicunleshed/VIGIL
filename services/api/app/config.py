@@ -28,6 +28,8 @@ class Settings:
     # Simulated clinician identities. Production authentication is out of scope.
     demo_actors: frozenset[str] = frozenset({"nurse-demo-1", "nurse-demo-2", "charge-demo-1"})
     cors_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000")
+    # Explanation provider name (see app/explain). "template" is rule-based and always available.
+    explainer: str = os.environ.get("VIGIL_EXPLAINER", "template")
     # Wall-clock seconds between simulation ticks while running.
     tick_seconds: float = 0.5
     # Accept observations timestamped at most this far ahead of the simulation clock.

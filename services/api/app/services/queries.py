@@ -12,12 +12,14 @@ from app.domain import AlertStatus, ObservationKind, ObservationQuality, Workflo
 from app.errors import NotFound
 from app.models import Alert, AlertAction, Event, Observation, Patient, SymptomReport, VisionEvent
 from app.schemas.outputs import (
+    ActivityOut,
     AlertActionOut,
     AlertOut,
     LatestValue,
     ObservationOut,
     PatientDetail,
     PatientSummary,
+    SeriesPointOut,
     SymptomReportOut,
     TimelineAlert,
     TimelineAlertAction,
@@ -184,3 +186,132 @@ def timeline(db: Session, patient_id: str) -> list[TimelineItem]:
         )
     keyed.sort(key=lambda k: (k[0], k[1]))
     return [item for _, _, item in keyed]
+
+
+def patient_series(
+    db: Session, kinds: list[ObservationKind]
+) -> dict[str, dict[ObservationKind, list[SeriesPointOut]]]:
+    out: dict[str, dict[ObservationKind, list[SeriesPointOut]]] = defaultdict(dict)
+    rows = db.scalars(
+        select(Observation)
+        .where(Observation.kind.in_([k.value for k in kinds]))
+        .order_by(Observation.patient_id, Observation.kind, Observation.observed_at, Observation.id)
+    )
+    for o in rows:
+        out[o.patient_id].setdefault(ObservationKind(o.kind), []).append(
+            SeriesPointOut(id=o.id, t=o.observed_at, v=o.value, q=ObservationQuality(o.quality))
+        )
+    return dict(out)
+
+
+_SHORT = {
+    "heart_rate": "HR",
+    "resp_rate": "RR",
+    "spo2": "SpO2",
+    "sbp": "SBP",
+    "temp": "Temp",
+}
+_ACTION_TITLE = {
+    "acknowledge": "Alert acknowledged",
+    "begin_reassessment": "Reassessment started",
+    "resolve": "Review documented",
+}
+
+
+def _vital_text(kind: str, value: float, unit: str) -> str:
+    v = f"{value:.1f}" if kind == "temp" else f"{value:.0f}"
+    return f"{_SHORT.get(kind, kind)} {v}{'' if unit == '%' else ' '}{unit}"
+
+
+def activity(db: Session, limit: int) -> list[ActivityOut]:
+    """Recent happenings across the waiting room, newest first. A round of vitals is one item."""
+    codes = dict(db.execute(select(Patient.id, Patient.display_code)).all())
+    items: list[ActivityOut] = []
+    events = list(db.scalars(select(Event).order_by(Event.seq.desc()).limit(limit * 6)))
+    obs = {
+        o.id: o
+        for o in db.scalars(
+            select(Observation).where(Observation.id.in_([e.event_id for e in events]))
+        )
+    }
+    rounds: dict[tuple[str, datetime], list[Observation]] = {}
+    for e in events:
+        if e.event_type == "observation" and e.event_id in obs:
+            rounds.setdefault((e.patient_id, e.occurred_at), []).append(obs[e.event_id])
+        elif e.event_type == "symptom_report":
+            tags = ", ".join(e.payload.get("structured_tags") or []).replace("_", " ")
+            text = e.payload.get("free_text")
+            items.append(
+                ActivityOut(
+                    key=f"rep-{e.event_id}",
+                    at=e.occurred_at,
+                    kind="symptom_report",
+                    patient_id=e.patient_id,
+                    display_code=codes.get(e.patient_id, e.patient_id),
+                    title="Patient report",
+                    detail=" · ".join(x for x in [f"“{text}”" if text else "", tags] if x),
+                    ref_id=e.event_id,
+                )
+            )
+        elif e.event_type == "vision_observation":
+            items.append(
+                ActivityOut(
+                    key=f"cam-{e.event_id}",
+                    at=e.occurred_at,
+                    kind="camera",
+                    patient_id=e.patient_id,
+                    display_code=codes.get(e.patient_id, e.patient_id),
+                    title="Camera observation",
+                    detail=str(e.payload.get("event_type", "")).replace("_", " "),
+                    ref_id=e.event_id,
+                )
+            )
+    for (pid, at), group in rounds.items():
+        group.sort(key=lambda o: o.kind)
+        items.append(
+            ActivityOut(
+                key=f"vit-{pid}-{at.isoformat()}",
+                at=at,
+                kind="vitals",
+                patient_id=pid,
+                display_code=codes.get(pid, pid),
+                title="Vitals recorded",
+                detail=" · ".join(_vital_text(o.kind, o.value, o.unit) for o in group),
+                ref_id=group[0].id,
+            )
+        )
+    for a in db.scalars(select(Alert).order_by(Alert.created_at.desc()).limit(limit)):
+        items.append(
+            ActivityOut(
+                key=f"alert-{a.id}",
+                at=a.created_at,
+                kind="alert",
+                patient_id=a.patient_id,
+                display_code=codes.get(a.patient_id, a.patient_id),
+                title="Attention needed",
+                detail=a.summary,
+                ref_id=a.id,
+            )
+        )
+    acts = db.execute(
+        select(AlertAction, Alert.patient_id)
+        .join(Alert, Alert.id == AlertAction.alert_id)
+        .order_by(AlertAction.timestamp.desc())
+        .limit(limit)
+    ).all()
+    for act, pid in acts:
+        outcome = f" · {act.outcome.replace('_', ' ')}" if act.outcome else ""
+        items.append(
+            ActivityOut(
+                key=f"act-{act.id}",
+                at=act.timestamp,
+                kind="alert_action",
+                patient_id=pid,
+                display_code=codes.get(pid, pid),
+                title=_ACTION_TITLE.get(act.action, act.action),
+                detail=f"{act.actor_simulated}{outcome}",
+                ref_id=act.alert_id,
+            )
+        )
+    items.sort(key=lambda i: (i.at, i.key), reverse=True)
+    return items[:limit]

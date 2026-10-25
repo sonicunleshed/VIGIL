@@ -1,6 +1,84 @@
 {
   "components": {
     "schemas": {
+      "ActivityFeedOut": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "items"
+        ],
+        "title": "ActivityFeedOut",
+        "type": "object"
+      },
+      "ActivityOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "display_code": {
+            "title": "Display Code",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "vitals",
+              "symptom_report",
+              "camera",
+              "alert",
+              "alert_action"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "ref_id": {
+            "title": "Ref Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "at",
+          "kind",
+          "patient_id",
+          "display_code",
+          "title",
+          "detail",
+          "ref_id"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AlertActionIn": {
         "additionalProperties": false,
         "properties": {
@@ -23,6 +101,17 @@
               }
             ],
             "title": "Note"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReassessmentOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Documented outcome; only accepted when resolving."
           }
         },
         "required": [
@@ -34,6 +123,7 @@
       "AlertActionKind": {
         "enum": [
           "acknowledge",
+          "begin_reassessment",
           "resolve"
         ],
         "title": "AlertActionKind",
@@ -66,6 +156,16 @@
               }
             ],
             "title": "Note"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReassessmentOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "seq": {
             "title": "Seq",
@@ -132,9 +232,31 @@
             "title": "Id",
             "type": "string"
           },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReassessmentOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "patient_id": {
             "title": "Patient Id",
             "type": "string"
+          },
+          "reassessment_started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reassessment Started At"
           },
           "resolved_at": {
             "anyOf": [
@@ -183,6 +305,7 @@
         "enum": [
           "open",
           "acknowledged",
+          "reassessment_started",
           "resolved"
         ],
         "title": "AlertStatus",
@@ -639,6 +762,119 @@
         "title": "EvaluationOut",
         "type": "object"
       },
+      "ExplanationOut": {
+        "description": "Provider-agnostic explanation. The UI renders this the same way for every provider.",
+        "properties": {
+          "cache_key": {
+            "description": "Changes when new data arrives for this subject.",
+            "title": "Cache Key",
+            "type": "string"
+          },
+          "cited_facts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Plain restatement of each cited id.",
+            "title": "Cited Facts",
+            "type": "object"
+          },
+          "fallback_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the configured provider was not used, if it was not.",
+            "title": "Fallback Reason"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "provider": {
+            "description": "'template' (rule-based) or another registered provider.",
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_version": {
+            "title": "Provider Version",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/ExplanationSectionOut"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "subject": {
+            "enum": [
+              "alert",
+              "patient"
+            ],
+            "title": "Subject",
+            "type": "string"
+          },
+          "subject_id": {
+            "title": "Subject Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "subject_id",
+          "patient_id",
+          "provider",
+          "provider_version",
+          "generated_at",
+          "cache_key",
+          "sections",
+          "cited_facts"
+        ],
+        "title": "ExplanationOut",
+        "type": "object"
+      },
+      "ExplanationSectionOut": {
+        "properties": {
+          "citations": {
+            "description": "Ids of stored events/alerts this sentence restates.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "what_changed",
+              "evidence",
+              "what_is_missing",
+              "suggested_workflow"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "citations"
+        ],
+        "title": "ExplanationSectionOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1024,6 +1260,46 @@
         "title": "PatientDetail",
         "type": "object"
       },
+      "PatientSeriesOut": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ObservationKind"
+            },
+            "title": "Kinds",
+            "type": "array"
+          },
+          "patients": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "items": {
+                  "$ref": "#/components/schemas/SeriesPointOut"
+                },
+                "type": "array"
+              },
+              "propertyNames": {
+                "$ref": "#/components/schemas/ObservationKind"
+              },
+              "type": "object"
+            },
+            "description": "Every reading since arrival, by observed time. Missing = never recorded.",
+            "title": "Patients",
+            "type": "object"
+          }
+        },
+        "required": [
+          "as_of",
+          "kinds",
+          "patients"
+        ],
+        "title": "PatientSeriesOut",
+        "type": "object"
+      },
       "PatientSummary": {
         "properties": {
           "arrival_at": {
@@ -1131,6 +1407,17 @@
         ],
         "title": "PatientsOut",
         "type": "object"
+      },
+      "ReassessmentOutcome": {
+        "description": "What staff documented when closing a review request. Workflow only, not a diagnosis.",
+        "enum": [
+          "reassessed_no_change",
+          "escalated_to_clinician",
+          "vitals_remeasured",
+          "not_needed"
+        ],
+        "title": "ReassessmentOutcome",
+        "type": "string"
       },
       "ReplayAlertOut": {
         "additionalProperties": false,
@@ -1544,6 +1831,34 @@
           "loaded"
         ],
         "title": "ScenariosOut",
+        "type": "object"
+      },
+      "SeriesPointOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "q": {
+            "$ref": "#/components/schemas/ObservationQuality"
+          },
+          "t": {
+            "format": "date-time",
+            "title": "T",
+            "type": "string"
+          },
+          "v": {
+            "title": "V",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "t",
+          "v",
+          "q"
+        ],
+        "title": "SeriesPointOut",
         "type": "object"
       },
       "SimulationStateOut": {
@@ -2554,6 +2869,52 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/activity": {
+      "get": {
+        "operationId": "activity_api_activity_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityFeedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activity",
+        "tags": [
+          "alerts",
+          "activity"
+        ]
+      }
+    },
     "/api/alerts": {
       "get": {
         "operationId": "list_alerts_api_alerts_get",
@@ -2696,8 +3057,116 @@
         ]
       }
     },
+    "/api/alerts/{alert_id}/begin-reassessment": {
+      "post": {
+        "operationId": "begin_reassessment_api_alerts__alert_id__begin_reassessment_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertActionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Unknown demo actor"
+          },
+          "404": {
+            "description": "Unknown alert"
+          },
+          "409": {
+            "description": "Invalid status transition"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Begin Reassessment",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/api/alerts/{alert_id}/explanation": {
+      "get": {
+        "operationId": "alert_explanation_api_alerts__alert_id__explanation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown alert"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Alert Explanation",
+        "tags": [
+          "alerts",
+          "explanations"
+        ]
+      }
+    },
     "/api/alerts/{alert_id}/resolve": {
       "post": {
+        "description": "Close the review request, optionally documenting the outcome.",
         "operationId": "resolve_api_alerts__alert_id__resolve_post",
         "parameters": [
           {
@@ -2943,6 +3412,51 @@
         ]
       }
     },
+    "/api/patients/series": {
+      "get": {
+        "operationId": "series_api_patients_series_get",
+        "parameters": [
+          {
+            "description": "Comma-separated kinds",
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": "heart_rate,spo2,resp_rate",
+              "description": "Comma-separated kinds",
+              "title": "Kinds",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSeriesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Series",
+        "tags": [
+          "patients"
+        ]
+      }
+    },
     "/api/patients/{patient_id}": {
       "get": {
         "operationId": "get_patient_api_patients__patient_id__get",
@@ -2985,6 +3499,52 @@
         "summary": "Get Patient",
         "tags": [
           "patients"
+        ]
+      }
+    },
+    "/api/patients/{patient_id}/explanation": {
+      "get": {
+        "operationId": "patient_explanation_api_patients__patient_id__explanation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplanationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown patient"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patient Explanation",
+        "tags": [
+          "patients",
+          "explanations"
         ]
       }
     },

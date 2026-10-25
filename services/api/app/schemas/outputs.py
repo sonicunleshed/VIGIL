@@ -13,6 +13,7 @@ from app.domain import (
     AlertType,
     ObservationKind,
     ObservationQuality,
+    ReassessmentOutcome,
     SimulationStatus,
     VisionEventType,
     VisionSessionStatus,
@@ -115,6 +116,7 @@ class AlertActionOut(_Out):
     actor_simulated: str
     action: AlertActionKind
     note: str | None
+    outcome: ReassessmentOutcome | None = None
     timestamp: datetime
 
 
@@ -130,7 +132,9 @@ class AlertOut(_Out):
     created_at: datetime
     status: AlertStatus
     acknowledged_at: datetime | None
+    reassessment_started_at: datetime | None = None
     resolved_at: datetime | None
+    outcome: ReassessmentOutcome | None = None
     actions: list[AlertActionOut] = Field(default_factory=list)
 
 
@@ -265,3 +269,57 @@ class AuditEntryOut(_Out):
     entity_type: str
     entity_id: str
     details: dict[str, Any]
+
+
+class SeriesPointOut(_Out):
+    id: str
+    t: datetime
+    v: float
+    q: ObservationQuality
+
+
+class PatientSeriesOut(_Out):
+    as_of: datetime
+    kinds: list[ObservationKind]
+    patients: dict[str, dict[ObservationKind, list[SeriesPointOut]]] = Field(
+        description="Every reading since arrival, by observed time. Missing = never recorded."
+    )
+
+
+class ActivityOut(_Out):
+    key: str
+    at: datetime
+    kind: Literal["vitals", "symptom_report", "camera", "alert", "alert_action"]
+    patient_id: str
+    display_code: str
+    title: str
+    detail: str
+    ref_id: str
+
+
+class ActivityFeedOut(_Out):
+    as_of: datetime
+    items: list[ActivityOut]
+
+
+class ExplanationSectionOut(_Out):
+    kind: Literal["what_changed", "evidence", "what_is_missing", "suggested_workflow"]
+    text: str
+    citations: list[str] = Field(description="Ids of stored events/alerts this sentence restates.")
+
+
+class ExplanationOut(_Out):
+    """Provider-agnostic explanation. The UI renders this the same way for every provider."""
+
+    subject: Literal["alert", "patient"]
+    subject_id: str
+    patient_id: str
+    provider: str = Field(description="'template' (rule-based) or another registered provider.")
+    provider_version: str
+    generated_at: datetime
+    cache_key: str = Field(description="Changes when new data arrives for this subject.")
+    fallback_reason: str | None = Field(
+        default=None, description="Why the configured provider was not used, if it was not."
+    )
+    sections: list[ExplanationSectionOut]
+    cited_facts: dict[str, str] = Field(description="Plain restatement of each cited id.")

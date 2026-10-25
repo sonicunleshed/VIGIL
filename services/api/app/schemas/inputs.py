@@ -12,6 +12,7 @@ from app.domain import (
     SYMPTOM_TAGS,
     ObservationKind,
     ObservationQuality,
+    ReassessmentOutcome,
     VisionEventType,
 )
 
@@ -86,6 +87,9 @@ class ScenarioEnvelope(BaseModel):
 class AlertActionIn(_Strict):
     actor_id: ActorId = Field(description="Local demo actor; production auth is out of scope.")
     note: str | None = Field(default=None, max_length=2000)
+    outcome: ReassessmentOutcome | None = Field(
+        default=None, description="Documented outcome; only accepted when resolving."
+    )
 
 
 class ResetIn(_Strict):

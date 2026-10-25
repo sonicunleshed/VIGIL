@@ -9,10 +9,11 @@ from sqlalchemy import select
 
 from app.api.deps import DbDep, RuntimeDep
 from app.db import write_lock
-from app.domain import AlertStatus, AlertType
+from app.domain import AlertActionKind, AlertStatus, AlertType
+from app.explain import service as explain_service
 from app.models import AlertAction, AuditLog
 from app.schemas.inputs import AlertActionIn
-from app.schemas.outputs import AlertOut, AlertsOut, AuditEntryOut
+from app.schemas.outputs import ActivityFeedOut, AlertOut, AlertsOut, AuditEntryOut, ExplanationOut
 from app.services import alerts, queries, simulation
 
 router = APIRouter(prefix="/api", tags=["alerts"])
@@ -38,12 +39,19 @@ def list_alerts(
 
 
 def _action(
-    alert_id: str, body: AlertActionIn, db: DbDep, runtime: RuntimeDep, resolve: bool
+    alert_id: str, body: AlertActionIn, db: DbDep, runtime: RuntimeDep, action: AlertActionKind
 ) -> AlertOut:
     with write_lock:
-        now = simulation.clock(db)
-        fn = alerts.resolve if resolve else alerts.acknowledge
-        alert = fn(db, alert_id, body.actor_id, body.note, now, runtime.settings.demo_actors)
+        alert = alerts.transition(
+            db,
+            alert_id=alert_id,
+            action=action,
+            actor_id=body.actor_id,
+            note=body.note,
+            outcome=body.outcome,
+            now=simulation.clock(db),
+            demo_actors=runtime.settings.demo_actors,
+        )
         db.commit()
         actions = list(
             db.scalars(
@@ -59,12 +67,38 @@ def _action(
 
 @router.post("/alerts/{alert_id}/acknowledge", response_model=AlertOut, responses=_ACTION_RESPONSES)
 def acknowledge(alert_id: str, body: AlertActionIn, db: DbDep, runtime: RuntimeDep) -> AlertOut:
-    return _action(alert_id, body, db, runtime, resolve=False)
+    return _action(alert_id, body, db, runtime, AlertActionKind.ACKNOWLEDGE)
+
+
+@router.post(
+    "/alerts/{alert_id}/begin-reassessment", response_model=AlertOut, responses=_ACTION_RESPONSES
+)
+def begin_reassessment(
+    alert_id: str, body: AlertActionIn, db: DbDep, runtime: RuntimeDep
+) -> AlertOut:
+    return _action(alert_id, body, db, runtime, AlertActionKind.BEGIN_REASSESSMENT)
 
 
 @router.post("/alerts/{alert_id}/resolve", response_model=AlertOut, responses=_ACTION_RESPONSES)
 def resolve(alert_id: str, body: AlertActionIn, db: DbDep, runtime: RuntimeDep) -> AlertOut:
-    return _action(alert_id, body, db, runtime, resolve=True)
+    """Close the review request, optionally documenting the outcome."""
+    return _action(alert_id, body, db, runtime, AlertActionKind.RESOLVE)
+
+
+@router.get(
+    "/alerts/{alert_id}/explanation",
+    response_model=ExplanationOut,
+    tags=["explanations"],
+    responses={404: {"description": "Unknown alert"}},
+)
+def alert_explanation(alert_id: str, db: DbDep, runtime: RuntimeDep) -> ExplanationOut:
+    ctx = explain_service.alert_context(db, alert_id, simulation.clock(db))
+    return explain_service.explain(ctx, runtime.settings.explainer)
+
+
+@router.get("/activity", response_model=ActivityFeedOut, tags=["activity"])
+def activity(db: DbDep, limit: Annotated[int, Query(ge=1, le=200)] = 30) -> ActivityFeedOut:
+    return ActivityFeedOut(as_of=simulation.clock(db), items=queries.activity(db, limit))
 
 
 @router.get("/audit", response_model=list[AuditEntryOut], tags=["audit"])

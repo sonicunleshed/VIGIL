@@ -176,7 +176,9 @@ class Alert(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     status: Mapped[str] = mapped_column(String(16))
     acknowledged_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    reassessment_started_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
 class AlertAction(Base):
@@ -188,6 +190,7 @@ class AlertAction(Base):
     actor_simulated: Mapped[str] = mapped_column(String(40))
     action: Mapped[str] = mapped_column(String(24))
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(UTCDateTime)
 
     __table_args__ = (UniqueConstraint("alert_id", "seq"),)

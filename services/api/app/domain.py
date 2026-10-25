@@ -79,6 +79,7 @@ class AlertType(StrEnum):
 class AlertStatus(StrEnum):
     OPEN = "open"
     ACKNOWLEDGED = "acknowledged"
+    REASSESSMENT_STARTED = "reassessment_started"
     RESOLVED = "resolved"
 
 
@@ -92,7 +93,17 @@ class WorkflowUrgency(StrEnum):
 
 class AlertActionKind(StrEnum):
     ACKNOWLEDGE = "acknowledge"
+    BEGIN_REASSESSMENT = "begin_reassessment"
     RESOLVE = "resolve"
+
+
+class ReassessmentOutcome(StrEnum):
+    """What staff documented when closing a review request. Workflow only, not a diagnosis."""
+
+    REASSESSED_NO_CHANGE = "reassessed_no_change"
+    ESCALATED_TO_CLINICIAN = "escalated_to_clinician"
+    VITALS_REMEASURED = "vitals_remeasured"
+    NOT_NEEDED = "not_needed"
 
 
 class SimulationStatus(StrEnum):

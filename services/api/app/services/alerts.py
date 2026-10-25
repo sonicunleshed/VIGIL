@@ -13,8 +13,14 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.domain import AlertActionKind, AlertStatus, AlertType, WorkflowUrgency
-from app.errors import Conflict, Forbidden, NotFound
+from app.domain import (
+    AlertActionKind,
+    AlertStatus,
+    AlertType,
+    ReassessmentOutcome,
+    WorkflowUrgency,
+)
+from app.errors import Conflict, Forbidden, Invalid, NotFound
 from app.models import Alert, AlertAction, Patient
 from app.services import audit
 
@@ -95,43 +101,67 @@ def list_alerts(
     return [(a, actions[a.id]) for a in alerts]
 
 
-def _act(
+# Allowed source states for each clinician action.
+TRANSITIONS: dict[AlertActionKind, tuple[set[AlertStatus], AlertStatus]] = {
+    AlertActionKind.ACKNOWLEDGE: ({AlertStatus.OPEN}, AlertStatus.ACKNOWLEDGED),
+    AlertActionKind.BEGIN_REASSESSMENT: (
+        {AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED},
+        AlertStatus.REASSESSMENT_STARTED,
+    ),
+    AlertActionKind.RESOLVE: (
+        {AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED, AlertStatus.REASSESSMENT_STARTED},
+        AlertStatus.RESOLVED,
+    ),
+}
+
+
+def transition(
     db: Session,
     *,
     alert_id: str,
+    action: AlertActionKind,
     actor_id: str,
     note: str | None,
+    outcome: ReassessmentOutcome | None,
     now: datetime,
-    action: AlertActionKind,
-    allowed_from: set[AlertStatus],
-    new_status: AlertStatus,
     demo_actors: frozenset[str],
 ) -> Alert:
+    """Apply one clinician action. Only these actions change alert status; nothing here
+    touches ESI, treatment priority or the patient's workflow status."""
     if actor_id not in demo_actors:
         raise Forbidden(f"unknown demo actor '{actor_id}'")
+    if outcome is not None and action != AlertActionKind.RESOLVE:
+        raise Invalid("an outcome can only be documented when resolving")
     alert = db.get(Alert, alert_id)
     if alert is None:
         raise NotFound(f"unknown alert '{alert_id}'")
+    allowed_from, new_status = TRANSITIONS[action]
     if AlertStatus(alert.status) not in allowed_from:
-        raise Conflict(f"cannot {action.value} an alert that is {alert.status}")
+        raise Conflict(f"cannot {action.value.replace('_', ' ')} an alert that is {alert.status}")
     alert.status = new_status.value
     if new_status == AlertStatus.ACKNOWLEDGED:
         alert.acknowledged_at = now
-    if new_status == AlertStatus.RESOLVED:
+    elif new_status == AlertStatus.REASSESSMENT_STARTED:
+        alert.reassessment_started_at = now
+        alert.acknowledged_at = alert.acknowledged_at or now
+    elif new_status == AlertStatus.RESOLVED:
         alert.resolved_at = now
+        alert.outcome = outcome.value if outcome else None
     prior = db.scalar(
         select(func.count()).select_from(AlertAction).where(AlertAction.alert_id == alert_id)
     )
-    act = AlertAction(
-        id=str(uuid.uuid4()),
-        alert_id=alert_id,
-        seq=int(prior or 0) + 1,
-        actor_simulated=actor_id,
-        action=action.value,
-        note=note,
-        timestamp=now,
+    db.add(
+        AlertAction(
+            id=str(uuid.uuid4()),
+            alert_id=alert_id,
+            seq=int(prior or 0) + 1,
+            actor_simulated=actor_id,
+            action=action.value,
+            note=note,
+            outcome=outcome.value if outcome else None,
+            timestamp=now,
+        )
     )
-    db.add(act)
     audit.record(
         db,
         at=now,
@@ -139,49 +169,11 @@ def _act(
         action=f"alert.{action.value}",
         entity_type="alert",
         entity_id=alert_id,
-        details={"note": note, "status": new_status.value},
+        details={
+            "note": note,
+            "status": new_status.value,
+            "outcome": outcome.value if outcome else None,
+        },
     )
     db.flush()
     return alert
-
-
-def acknowledge(
-    db: Session,
-    alert_id: str,
-    actor_id: str,
-    note: str | None,
-    now: datetime,
-    demo_actors: frozenset[str],
-) -> Alert:
-    return _act(
-        db,
-        alert_id=alert_id,
-        actor_id=actor_id,
-        note=note,
-        now=now,
-        action=AlertActionKind.ACKNOWLEDGE,
-        allowed_from={AlertStatus.OPEN},
-        new_status=AlertStatus.ACKNOWLEDGED,
-        demo_actors=demo_actors,
-    )
-
-
-def resolve(
-    db: Session,
-    alert_id: str,
-    actor_id: str,
-    note: str | None,
-    now: datetime,
-    demo_actors: frozenset[str],
-) -> Alert:
-    return _act(
-        db,
-        alert_id=alert_id,
-        actor_id=actor_id,
-        note=note,
-        now=now,
-        action=AlertActionKind.RESOLVE,
-        allowed_from={AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED},
-        new_status=AlertStatus.RESOLVED,
-        demo_actors=demo_actors,
-    )

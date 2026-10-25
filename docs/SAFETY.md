@@ -37,6 +37,8 @@ are scenario-author intent.
 | Risk | Mitigation |
 |---|---|
 | Alert fatigue | Alert families with unresolved-suppression and cooldowns; one stale reminder per patient, false alerts per patient-hour metric (Phase 5) |
-| Missed change | UI must never imply "no alert = safe"; standard clinical workflow retained |
+| Missed change | UI must never imply "no alert = safe": the neutral status is labelled "No open alert", and Home lists the least recently observed patients; standard clinical workflow retained |
+| Status read as severity | "Prompt review" is a configured workflow urgency, not clinical severity; observation status and review workflow are shown as separate labels |
+| Late data read as new change | Activity marks out-of-order deliveries with their arrival time |
 | Stale data | Explicit ages and unknown states; separate reminder type |
 | Reproducibility | Seeded generator, UUIDv5 ids, sim clock, fixture equality test |

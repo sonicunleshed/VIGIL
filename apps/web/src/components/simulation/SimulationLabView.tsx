@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Sparkles } from "lucide-react";
 import { useId, useState } from "react";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { AlertTrend } from "@/components/dashboard/AlertTrend";
@@ -10,8 +10,38 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button, Card, CardHeader, ErrorState, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
 import { formatAge } from "@/lib/format";
+import { STATUS_ORDER } from "@/lib/monitoring";
 import { buildRows } from "@/lib/queue";
-import { useVigil } from "@/lib/store";
+import { useVigil, type StreamEvent } from "@/lib/store";
+
+/** Plain-language labels for live stream events. */
+const SPOTLIGHT: Record<string, string> = {
+  observation: "New reading arrived",
+  symptom_report: "A patient reported a symptom",
+  alert_created: "VIGIL raised a reassessment request",
+  alert_updated: "A nurse acted on a request",
+  vision_observation_created: "A camera observation arrived",
+  reset: "The scenario was reset",
+};
+
+/** Patient id and a short detail from an SSE payload ({observation|alert|...: {patient_id, ...}}). */
+export function describeEvent(ev: StreamEvent): { text: string; patientId: string | null; detail: string | null } {
+  let patientId: string | null = null;
+  let detail: string | null = null;
+  for (const v of Object.values(ev.data)) {
+    if (v && typeof v === "object" && "patient_id" in v) {
+      const o = v as Record<string, unknown>;
+      patientId = typeof o.patient_id === "string" ? o.patient_id : null;
+      if (typeof o.summary === "string") detail = o.summary;
+    }
+  }
+  const late = ev.type === "observation" && ev.data.out_of_order === true;
+  return {
+    text: late ? "A late reading arrived (out of order, not a new change)" : (SPOTLIGHT[ev.type] ?? ev.type),
+    patientId,
+    detail,
+  };
+}
 
 function SeedReset({ current }: { current: number }) {
   const { run } = useVigil();
@@ -53,21 +83,57 @@ function SeedReset({ current }: { current: number }) {
 }
 
 export function SimulationLabView() {
-  const { patients, alerts, simulation, loading, error } = useVigil();
+  const { patients, alerts, simulation, events, loading, error } = useVigil();
+  const patientsById = new Map(patients.map((p) => [p.id, p]));
   if (error && patients.length === 0) return <ErrorState title="Cannot reach the simulation" detail={error} />;
   if (loading || !simulation) return <Skeleton className="h-96" />;
   const rows = buildRows(patients, alerts);
 
+  const latest = events.find((e) => SPOTLIGHT[e.type]);
+  const spot = latest ? describeEvent(latest) : null;
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+      <p className="max-w-3xl text-sm text-fg-2">
+        Drive the waiting-room scenario. All 30 patients, their readings and reports are synthetic, generated from the
+        seed below, so any run can be reproduced exactly.
+      </p>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <SimulationControls />
         <Card as="div" className="p-4" aria-label="Scenario seed">
           <SeedReset key={simulation.seed} current={simulation.seed} />
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      <section aria-label="What just happened" aria-live="polite" className="flex flex-wrap items-center gap-3 rounded-2xl border border-card-line bg-surface px-5 py-3 shadow-[var(--card-shadow)]">
+        <Sparkles aria-hidden className="size-4 text-accent" />
+        <span className="text-sm font-semibold text-fg">What just happened?</span>
+        {spot ? (
+          <span className="min-w-0 text-sm text-fg-2">
+            {spot.text}
+            {spot.patientId && patientsById.get(spot.patientId) && (
+              <>
+                {" "}for{" "}
+                <Link href={`/patients/${spot.patientId}`} className="font-mono font-semibold text-fg hover:underline">
+                  {patientsById.get(spot.patientId)?.display_code}
+                </Link>
+              </>
+            )}
+            {spot.detail && <span className="text-fg-3">: {spot.detail}</span>}
+          </span>
+        ) : (
+          <span className="text-sm text-fg-3">Nothing yet. Press Play or +5 min.</span>
+        )}
+        <ul className="ml-auto flex flex-wrap gap-x-4 gap-y-1 text-xs text-fg-3" aria-label="Status legend">
+          {STATUS_ORDER.map((st) => (
+            <li key={st}>
+              <StatusBadge status={st} size="sm" />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <section aria-labelledby="grid-title">
           <h2 id="grid-title" className="mb-3 text-lg font-semibold text-fg">
             All patients

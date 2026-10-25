@@ -2,15 +2,16 @@
 
 import type { AlertOut, PatientSummary } from "@vigil/contracts";
 import Link from "next/link";
-import { BellOff, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { ArrowRight, BellOff, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertActions } from "@/components/alerts/AlertActions";
 import { ExplanationPanel } from "@/components/explain/ExplanationPanel";
+import { WorkflowBadge } from "@/components/ui/StatusBadge";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
 import { formatAge, formatClock, formatDuration, secondsBetween } from "@/lib/format";
 import {
   ALERT_SORT_POLICY,
-  ALERT_STATUS_LABEL,
   ALERT_TYPE_LABEL,
   compareAlerts,
   lastObservation,
@@ -32,38 +33,91 @@ const URGENCY_TONE: Record<string, string> = {
   review: "text-st-due",
   routine: "text-st-gap",
 };
+const URGENCY_BORDER: Record<string, string> = {
+  prompt_review: "border-l-st-urgent",
+  review: "border-l-st-due",
+  routine: "border-l-st-gap",
+};
 
-function AttentionItem({ alert, patient, asOf }: { alert: AlertOut; patient: PatientSummary | undefined; asOf: string }) {
-  const [open, setOpen] = useState(false);
+const ACTION_TEXT: Record<string, string> = {
+  acknowledge: "Acknowledged",
+  begin_reassessment: "Reassessment started",
+  resolve: "Outcome documented",
+};
+
+function AttentionItem({
+  alert,
+  patient,
+  asOf,
+  initiallyOpen,
+}: {
+  alert: AlertOut;
+  patient: PatientSummary | undefined;
+  asOf: string;
+  initiallyOpen: boolean;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
+  const ref = useRef<HTMLLIElement>(null);
   const last = patient ? lastObservation(patient) : null;
-  const lastAction = alert.actions?.at(-1);
+  useEffect(() => {
+    if (initiallyOpen) ref.current?.scrollIntoView({ block: "center" });
+  }, [initiallyOpen]);
   return (
-    <li className="rounded-2xl border border-card-line bg-surface p-4 shadow-[var(--card-shadow)]">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto]">
+    <li
+      ref={ref}
+      className={`rounded-2xl border border-l-4 border-card-line bg-surface p-4 shadow-[var(--card-shadow)] ${URGENCY_BORDER[alert.workflow_urgency] ?? ""} ${
+        initiallyOpen ? "ring-2 ring-accent/40" : ""
+      }`}
+    >
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_minmax(0,19rem)]">
         <div className="min-w-0">
           <Link href={`/patients/${alert.patient_id}`} className="font-mono text-base font-semibold text-fg hover:underline">
             {patient?.display_code ?? alert.patient_id}
           </Link>
           {patient && (
-            <p className="text-xs text-fg-3">
+            <p className="text-[13px] text-fg-2">
               {patient.complaint} · ESI {patient.initial_esi_simulated} · waiting {formatDuration(patient.minutes_waiting)}
             </p>
           )}
-          <p className="mt-1 text-xs text-fg-3">{last ? `Last observed ${formatAge(last.ageSeconds)}` : "Never observed"}</p>
+          <p className="tabular mt-1 text-xs text-fg-3">
+            {last ? `Last reading observed ${formatClock(last.at)} UTC (${formatAge(last.ageSeconds)})` : "Never observed"}
+          </p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs">
-            <span className={`font-semibold ${URGENCY_TONE[alert.workflow_urgency] ?? ""}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold ${URGENCY_TONE[alert.workflow_urgency] ?? ""}`}>
               {URGENCY_LABEL[alert.workflow_urgency] ?? alert.workflow_urgency}
             </span>
-            <span className="text-fg-3"> · {ALERT_TYPE_LABEL[alert.type] ?? alert.type}</span>
-          </p>
-          <p className="mt-0.5 text-sm text-fg">{alert.summary}</p>
-          <p className="tabular mt-1 text-[11px] text-fg-3">
-            Raised {formatClock(alert.created_at)} UTC ({formatAge(secondsBetween(asOf, alert.created_at))})
-            {lastAction && ` · ${ALERT_STATUS_LABEL[alert.status]} by ${lastAction.actor_simulated} at ${formatClock(lastAction.timestamp)}`}
-            {alert.outcome && ` · ${OUTCOME_LABEL[alert.outcome]}`}
-          </p>
+            <span className="text-xs text-fg-3">· {ALERT_TYPE_LABEL[alert.type] ?? alert.type}</span>
+            <WorkflowBadge status={alert.status} size="sm" />
+          </div>
+          <p className="mt-1 text-sm text-fg">{alert.summary}</p>
+          <dl className="tabular mt-1.5 grid gap-x-4 gap-y-0.5 text-xs text-fg-3 sm:grid-cols-2">
+            <div>
+              <dt className="inline">Alert raised </dt>
+              <dd className="inline text-fg-2">
+                {formatClock(alert.created_at)} UTC ({formatAge(secondsBetween(asOf, alert.created_at))})
+              </dd>
+            </div>
+            <div>
+              <dt className="inline">Detector </dt>
+              <dd className="inline text-fg-2">
+                {alert.detector} v{alert.detector_version}
+              </dd>
+            </div>
+          </dl>
+          {alert.actions && alert.actions.length > 0 && (
+            <ol className="tabular mt-1.5 space-y-0.5 text-xs text-fg-3" aria-label="Actions taken">
+              {alert.actions.map((a) => (
+                <li key={a.id}>
+                  {formatClock(a.timestamp)} UTC · {ACTION_TEXT[a.action] ?? a.action} by{" "}
+                  <span className="text-fg-2">{a.actor_simulated}</span>
+                  {a.outcome && ` · ${OUTCOME_LABEL[a.outcome]}`}
+                  {a.note && `: “${a.note}”`}
+                </li>
+              ))}
+            </ol>
+          )}
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -74,7 +128,7 @@ function AttentionItem({ alert, patient, asOf }: { alert: AlertOut; patient: Pat
             {open ? <ChevronUp aria-hidden className="size-3.5" /> : <ChevronDown aria-hidden className="size-3.5" />}
           </button>
         </div>
-        <div className="lg:w-80">
+        <div className="min-w-0">
           <AlertActions alert={alert} size="sm" />
         </div>
       </div>
@@ -89,17 +143,21 @@ function AttentionItem({ alert, patient, asOf }: { alert: AlertOut; patient: Pat
 
 export function AttentionView() {
   const { alerts, patients, asOf, loading, error } = useVigil();
-  const [tab, setTab] = useState<TabKey>("open");
+  const params = useSearchParams();
+  const focusId = params.get("alert");
+  const focused = focusId ? alerts.find((a) => a.id === focusId) : undefined;
+  const [tab, setTab] = useState<TabKey | null>(null);
   const [type, setType] = useState<string>("all");
+  const activeTab: TabKey = tab ?? (focused?.status as TabKey | undefined) ?? "open";
   const byId = useMemo(() => new Map(patients.map((p) => [p.id, p])), [patients]);
   const counts = useMemo(() => {
     const c: Record<TabKey, number> = { open: 0, acknowledged: 0, reassessment_started: 0, resolved: 0 };
-    for (const a of alerts) c[a.status as TabKey] += 1;
+    for (const a of alerts) if (type === "all" || a.type === type) c[a.status as TabKey] += 1;
     return c;
-  }, [alerts]);
+  }, [alerts, type]);
   const shown = useMemo(
-    () => alerts.filter((a) => a.status === tab && (type === "all" || a.type === type)).sort(compareAlerts),
-    [alerts, tab, type],
+    () => alerts.filter((a) => a.status === activeTab && (type === "all" || a.type === type)).sort(compareAlerts),
+    [alerts, activeTab, type],
   );
 
   if (error && alerts.length === 0 && patients.length === 0) return <ErrorState title="Cannot load review requests" detail={error} />;
@@ -108,9 +166,17 @@ export function AttentionView() {
   return (
     <div className="space-y-5">
       <p className="max-w-3xl text-sm text-fg-2">
-        Reassessment requests raised by VIGIL. This queue is separate from the clinician-owned
-        treatment queue: acting on a request never changes ESI or treatment priority.
+        Each request is advisory: VIGIL noticed something after triage and asks a clinician to look. Working
+        a request never changes ESI or the treatment queue.
       </p>
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs text-fg-3" aria-label="Review workflow">
+        {TABS.map((t, i) => (
+          <li key={t.key} className="inline-flex items-center gap-1.5">
+            {i > 0 && <ArrowRight aria-hidden className="size-3" />}
+            <span className="font-medium text-fg-2">{t.label}</span>
+          </li>
+        ))}
+      </ol>
       <div className="flex flex-wrap items-center gap-3">
         <div role="tablist" aria-label="Request status" className="flex flex-wrap rounded-lg bg-raised p-0.5">
           {TABS.map((t) => (
@@ -118,14 +184,14 @@ export function AttentionView() {
               key={t.key}
               role="tab"
               type="button"
-              aria-selected={tab === t.key}
+              aria-selected={activeTab === t.key}
               onClick={() => setTab(t.key)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm ${
-                tab === t.key ? "bg-surface text-fg shadow-[var(--card-shadow)]" : "text-fg-3 hover:text-fg"
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm ${
+                activeTab === t.key ? "bg-surface text-fg shadow-[var(--card-shadow)]" : "text-fg-3 hover:text-fg"
               }`}
             >
               {t.label}
-              <span className="tabular rounded-full bg-raised px-1.5 text-[11px] text-fg-2">{counts[t.key]}</span>
+              <span className="tabular rounded-full bg-raised px-1.5 text-xs text-fg-2">{counts[t.key]}</span>
             </button>
           ))}
         </div>
@@ -144,16 +210,18 @@ export function AttentionView() {
             ))}
           </select>
         </label>
-        <p className="text-[11px] text-fg-3">{ALERT_SORT_POLICY}</p>
+        <p className="text-xs text-fg-3">{ALERT_SORT_POLICY}</p>
       </div>
       {shown.length === 0 ? (
-        <EmptyState icon={BellOff} title={tab === "open" ? "Nothing waiting for review" : "Nothing here"}>
-          {tab === "open" ? "No open requests right now. Check data freshness in Live Monitoring." : null}
+        <EmptyState icon={BellOff} title={activeTab === "open" ? "No open reassessment requests" : "Nothing here"}>
+          {activeTab === "open"
+            ? "VIGIL keeps watching incoming observations. No open request does not mean anyone is stable; check data freshness in Live Monitoring."
+            : null}
         </EmptyState>
       ) : (
         <ul className="space-y-3" role="tabpanel">
           {shown.map((a) => (
-            <AttentionItem key={a.id} alert={a} patient={byId.get(a.patient_id)} asOf={asOf} />
+            <AttentionItem key={a.id} alert={a} patient={byId.get(a.patient_id)} asOf={asOf} initiallyOpen={a.id === focusId} />
           ))}
         </ul>
       )}

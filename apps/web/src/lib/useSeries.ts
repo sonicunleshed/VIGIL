@@ -1,11 +1,11 @@
 "use client";
 
 import { api } from "@/lib/api/client";
-import { STORY_KINDS } from "@/lib/story";
+import { SERIES_KINDS } from "@/lib/story";
 import { useLive } from "@/lib/useLive";
 
-/** Per-patient readings since arrival for the story-card vitals. */
+/** Per-patient readings since arrival for story-card vitals and sparklines. */
 export function useSeries() {
-  const { data } = useLive("series", () => api.series(STORY_KINDS));
+  const { data } = useLive("series", () => api.series(SERIES_KINDS));
   return data?.patients ?? {};
 }

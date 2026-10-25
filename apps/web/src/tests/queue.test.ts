@@ -36,4 +36,8 @@ describe("patient queue", () => {
     expect(ids(filterAndSort(rows, { ...DEFAULT_FILTERS, sort: "last_obs_oldest" }))[0]).toBe("P003");
     expect(ids(filterAndSort(rows, { ...DEFAULT_FILTERS, sort: "last_obs_newest" })).at(-1)).toBe("P003");
   });
+  it("can show open requests first, as a display order", () => {
+    const sorted = ids(filterAndSort(rows, { ...DEFAULT_FILTERS, sort: "requests_first" }));
+    expect(sorted[0]).toBe("P002");
+  });
 });

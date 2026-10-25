@@ -2,6 +2,8 @@
 import type { ObservationKind, SeriesPointOut } from "@vigil/contracts";
 
 export const STORY_KINDS: ObservationKind[] = ["heart_rate", "spo2", "resp_rate"];
+/** Fetched for sparklines, so a card can chart whichever vital an alert cites. */
+export const SERIES_KINDS: ObservationKind[] = ["heart_rate", "spo2", "resp_rate", "sbp", "temp"];
 
 /** Typical reading-to-reading spread per vital, used only to compare movement across vitals. */
 const SCALE: Partial<Record<ObservationKind, number>> = { heart_rate: 10, spo2: 2, resp_rate: 3 };
@@ -34,4 +36,15 @@ export function focusKind(cs: VitalChange[]): ObservationKind {
     if (!best || s > Math.abs(best.delta) / (SCALE[best.kind] ?? 1)) best = c;
   }
   return best && Math.abs(best.delta) > 0 ? best.kind : "heart_rate";
+}
+
+/** The first vital (in display order) with a reading cited by an alert's evidence. */
+export function evidenceKind(
+  series: Partial<Record<ObservationKind, SeriesPointOut[]>> | undefined,
+  eventIds: string[],
+): ObservationKind | null {
+  if (!series || eventIds.length === 0) return null;
+  const ids = new Set(eventIds);
+  for (const kind of SERIES_KINDS) if (series[kind]?.some((p) => ids.has(p.id))) return kind;
+  return null;
 }

@@ -14,6 +14,16 @@ export function InsightsView() {
 
   return (
     <div className="space-y-6">
+      <Card aria-labelledby="eval-title">
+        <CardHeader
+          id="eval-title"
+          title="Results"
+          subtitle="Three monitoring strategies over whole scenarios: what each catches, and what it costs in false alerts"
+        />
+        <div className="p-5">
+          <EvaluationPanel />
+        </div>
+      </Card>
       <Card aria-labelledby="replay-title">
         <CardHeader
           id="replay-title"
@@ -25,16 +35,6 @@ export function InsightsView() {
         </div>
       </Card>
 
-      <Card aria-labelledby="eval-title">
-        <CardHeader
-          id="eval-title"
-          title="Evaluation"
-          subtitle="Detector metrics over whole scenarios, with denominators"
-        />
-        <div className="p-5">
-          <EvaluationPanel />
-        </div>
-      </Card>
     </div>
   );
 }

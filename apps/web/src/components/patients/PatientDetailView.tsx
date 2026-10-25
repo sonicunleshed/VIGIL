@@ -69,7 +69,7 @@ export function PatientDetailView() {
     return (
       <div className="space-y-6" aria-busy="true" aria-label="Loading patient">
         <Skeleton className="h-20" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {VITALS.map((v) => (
             <Skeleton key={v.kind} className="h-32" />
           ))}
@@ -136,7 +136,7 @@ export function PatientDetailView() {
         </div>
       </div>
 
-      <section aria-label="Latest vital signs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section aria-label="Latest vital signs" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {VITALS.map((v) => {
           const series = byKind.get(v.kind) ?? [];
           return (
@@ -152,7 +152,7 @@ export function PatientDetailView() {
         })}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
         <div className="space-y-6">
           <Card aria-labelledby="trend-title">
             <CardHeader

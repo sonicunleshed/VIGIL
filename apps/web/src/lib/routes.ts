@@ -17,7 +17,7 @@ export const NAV: NavSection[] = [
     items: [
       { href: "/", label: "Home", icon: House },
       { href: "/patients", label: "Live Monitoring", icon: Users },
-      { href: "/attention", label: "Attention Needed", icon: BellRing, badge: "attention" },
+      { href: "/attention", label: "Reassessment Requests", icon: BellRing, badge: "attention" },
       { href: "/vision", label: "VIGIL Vision", icon: ScanEye },
     ],
   },
@@ -33,8 +33,8 @@ export const NAV: NavSection[] = [
 
 const META: [string, { title: string; subtitle: string }][] = [
   ["/patients/", { title: "Patient timeline", subtitle: "What changed since triage, and why" }],
-  ["/patients", { title: "Live Monitoring", subtitle: "Every patient waiting, with data freshness" }],
-  ["/attention", { title: "Attention Needed", subtitle: "Review requests and reassessment queue" }],
+  ["/patients", { title: "Live Monitoring", subtitle: "Every patient waiting: latest readings, data freshness and open requests" }],
+  ["/attention", { title: "Reassessment Requests", subtitle: "Advisory requests from VIGIL, and what the nurse did about each" }],
   ["/vision", { title: "VIGIL Vision", subtitle: "On-device movement observations from a camera" }],
   ["/demo", { title: "Watch VIGIL in Action", subtitle: "A guided, reproducible walkthrough" }],
   ["/simulation", { title: "Simulation Lab", subtitle: "Drive the scenario and watch events arrive" }],
@@ -43,7 +43,7 @@ const META: [string, { title: string; subtitle: string }][] = [
 
 export function pageMeta(pathname: string): { title: string; subtitle: string } {
   for (const [prefix, meta] of META) if (pathname.startsWith(prefix)) return meta;
-  return { title: "Who needs attention", subtitle: "Emergency department waiting room" };
+  return { title: "Home", subtitle: "Emergency department waiting room" };
 }
 
 export function isActive(href: string, pathname: string | null): boolean {

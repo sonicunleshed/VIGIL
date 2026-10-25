@@ -16,10 +16,10 @@ export const STATUS_ORDER: MonitoringStatus[] = [
 
 /** The exact mapping shown to users in the status legend. */
 export const STATUS_POLICY: Record<MonitoringStatus, string> = {
-  urgent_review: "Has an unresolved alert labelled prompt review",
-  reassessment_due: "Has an unresolved observed-change, patient-report or camera alert",
-  information_gap: "Only unresolved stale-data or data-quality alerts",
-  monitoring: "No unresolved alerts. This is not a statement that the patient is stable",
+  urgent_review: "An unresolved request set to prompt review. A workflow setting, not clinical severity",
+  reassessment_due: "An unresolved observed-change, patient-report or camera request",
+  information_gap: "Only stale, missing or questionable-data requests",
+  monitoring: "No unresolved request. Not a statement that the patient is stable",
 };
 
 const CHANGE_TYPES = new Set(["OBSERVED_CHANGE", "PATIENT_REPORT", "CAMERA_OBSERVATION"]);
@@ -83,6 +83,18 @@ export const OUTCOME_LABEL: Record<ReassessmentOutcome, string> = {
   vitals_remeasured: "Vitals re-measured",
   not_needed: "Not needed (duplicate or resolved)",
 };
+
+/**
+ * The next step in the review workflow, mirroring the backend transitions: acknowledge, then begin
+ * reassessment, then document. The backend also allows documenting earlier (e.g. a duplicate),
+ * so that stays available as a secondary action.
+ */
+export function nextStep(status: AlertOut["status"]): "acknowledge" | "begin_reassessment" | "resolve" | null {
+  if (status === "open") return "acknowledge";
+  if (status === "acknowledged") return "begin_reassessment";
+  if (status === "reassessment_started") return "resolve";
+  return null;
+}
 
 export const URGENCY_LABEL: Record<string, string> = {
   prompt_review: "Prompt review",

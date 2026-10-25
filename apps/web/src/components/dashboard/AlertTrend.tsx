@@ -26,15 +26,19 @@ export function AlertTrend({ alerts, from, to }: { alerts: AlertOut[]; from: str
   const data = bucketAlerts(alerts, from, to);
   return (
     <Card aria-labelledby="alert-trend">
-      <CardHeader id="alert-trend" title="Attention needed over time" subtitle={`Per ${BUCKET_MIN} minutes since scenario start`} />
-      <div className="h-40 px-3 py-4">
+      <CardHeader
+        id="alert-trend"
+        title="Requests raised over time"
+        subtitle={`Number of reassessment requests created per ${BUCKET_MIN}-minute interval, scenario time (UTC)`}
+      />
+      <div className="h-48 px-3 py-4">
         {alerts.length === 0 ? (
           <EmptyState icon={BellOff} title="No review requests yet">
             Alerts appear here when backend detectors flag an observed change or a data gap.
           </EmptyState>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 14, left: 0 }}>
               <XAxis
                 dataKey="t"
                 tickFormatter={(t: number) => formatClock(t)}
@@ -42,13 +46,22 @@ export function AlertTrend({ alerts, from, to }: { alerts: AlertOut[]; from: str
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
+                label={{ value: "Scenario time (UTC)", position: "insideBottom", offset: -10, fontSize: 11, fill: "var(--text-3)" }}
               />
-              <YAxis allowDecimals={false} stroke="var(--text-3)" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis
+                allowDecimals={false}
+                width={44}
+                stroke="var(--text-3)"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                label={{ value: "Requests", angle: -90, position: "insideLeft", fontSize: 11, fill: "var(--text-3)" }}
+              />
               <Tooltip
                 cursor={{ fill: "var(--raised)" }}
                 contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8 }}
                 labelFormatter={(t) => `${formatClock(Number(t))} UTC`}
-                formatter={(v) => [v, "Alerts"]}
+                formatter={(v) => [v, "Requests raised"]}
               />
               <Bar dataKey="count" fill="var(--st-info)" radius={[3, 3, 0, 0]} isAnimationActive={false} />
             </BarChart>

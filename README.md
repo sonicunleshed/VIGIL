@@ -18,6 +18,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | 5 | Counterfactual replay + evaluation (Insights & Replay screen) | ✅ done |
 | C/D | VIGIL Vision: on-device pose, camera sessions bound to a patient, timeline events | ✅ done |
 | E | Light theme, new navigation, patient story cards, guided demo, reassessment workflow, explanation seam | ✅ done |
+| E.2 | Clarity pass: self-explaining Home, separate observation/workflow status, next-step actions, 7-step demo with nurse review, results summary, late-delivery marking | ✅ done |
 
 ## Quick start
 
@@ -29,13 +30,15 @@ pnpm dev         # API on :8000, web on :3000
 ```
 
 Open http://localhost:3000. Screens:
-- **Home**: who needs attention, recent activity, least-recently-observed patients.
-- **Live Monitoring**: every patient as a story card, or the full table.
-- **Attention Needed**: review requests. Acknowledge, begin reassessment, document the outcome.
+- **Home**: what VIGIL does, who has an open request, recent activity, least-recently-observed patients.
+- **Live Monitoring**: every patient as a story card or a table, with observation status and review state shown separately.
+- **Reassessment Requests**: acknowledge, begin reassessment, document the outcome; the next step is always the primary button.
 - **VIGIL Vision**: an optional camera, linked to a patient by staff.
-- **Watch VIGIL in Action**: a guided, reproducible demo.
-- **Simulation Lab**: drive the scenario.
-- **Insights & Replay**: compare strategies on the same data. On first start the API migrates its SQLite DB
+- **Watch VIGIL in Action**: a guided, reproducible 7-step walkthrough (see [docs/DEMO.md](docs/DEMO.md)).
+- **Simulation Lab**: drive the synthetic scenario.
+- **Insights & Replay**: results on synthetic scenarios and the counterfactual replay.
+
+On first start the API migrates its SQLite DB
 (`services/api/var/vigil.db`) and loads scenario `waiting-room-30` with seed 42: 30 synthetic
 patients already waiting, with their triage vitals as history.
 

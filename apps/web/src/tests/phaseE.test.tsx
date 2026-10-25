@@ -2,7 +2,7 @@ import type { ExplanationOut, SeriesPointOut } from "@vigil/contracts";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ExplanationView } from "@/components/explain/ExplanationPanel";
-import { changes, focusKind } from "@/lib/story";
+import { changes, evidenceKind, focusKind } from "@/lib/story";
 
 afterEach(cleanup);
 
@@ -27,6 +27,13 @@ describe("story helpers", () => {
     });
     expect(focusKind(cs)).toBe("spo2");
     expect(focusKind([])).toBe("heart_rate");
+  });
+
+  it("charts the vital an alert cites, when its reading is in the series", () => {
+    const series = { heart_rate: [pt("a", "t1", 80)], sbp: [pt("b", "t1", 120), pt("c", "t2", 86)] };
+    expect(evidenceKind(series, ["c"])).toBe("sbp");
+    expect(evidenceKind(series, ["zzz"])).toBeNull();
+    expect(evidenceKind(undefined, ["c"])).toBeNull();
   });
 
   it("returns nothing for a patient with no readings (unknown, not normal)", () => {

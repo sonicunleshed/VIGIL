@@ -13,6 +13,7 @@ import { useVigil } from "@/lib/store";
 import { useSeries } from "@/lib/useSeries";
 
 const SORT_LABEL: Record<SortKey, string> = {
+  requests_first: "Open requests first",
   waiting_desc: "Longest waiting",
   waiting_asc: "Shortest waiting",
   last_obs_oldest: "Least recently observed",
@@ -25,7 +26,7 @@ export function LiveMonitoringView() {
   const { patients, alerts, loading, error } = useVigil();
   const series = useSeries();
   const [view, setView] = useState<"cards" | "table">("cards");
-  const [f, setF] = useState<QueueFilters>({ ...DEFAULT_FILTERS, sort: "last_obs_oldest" });
+  const [f, setF] = useState<QueueFilters>({ ...DEFAULT_FILTERS, sort: "requests_first" });
   const rows = useMemo(() => buildRows(patients, alerts), [patients, alerts]);
   const visible = useMemo(() => filterAndSort(rows, f), [rows, f]);
   const byPatient = useMemo(() => alertsByPatient(alerts), [alerts]);
@@ -115,8 +116,9 @@ export function LiveMonitoringView() {
                 ))}
               </select>
             </label>
-            <p className="tabular ml-auto text-xs text-fg-3" role="status">
+            <p className="tabular ml-auto text-right text-xs text-fg-3" role="status">
               {visible.length} of {rows.length} patients
+              <span className="block">Display order only · never a treatment priority</span>
             </p>
           </>
         )}
@@ -127,7 +129,7 @@ export function LiveMonitoringView() {
       ) : visible.length === 0 ? (
         <EmptyState icon={Users} title="No patients match these filters" />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((r) => (
             <PatientStoryCard
               key={r.patient.id}

@@ -187,7 +187,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
         </p>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <ComparisonTable detectors={result.detectors} hasDeterioration={hasDeterioration} />
         <Card as="div" aria-label="Evidence inspector">
           <CardHeader title="Evidence inspector" subtitle="What the detector had when it fired" />

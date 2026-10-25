@@ -28,7 +28,8 @@ function SidebarNavWithPath(props: Props) {
 
 function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & { pathname: string | null }) {
   const { alerts } = useVigil();
-  const attention = alerts.filter((a) => a.status !== "resolved").length;
+  // Same number as the "Needs review" tab: requests nobody has acknowledged yet.
+  const attention = alerts.filter((a) => a.status === "open").length;
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col">
@@ -79,7 +80,7 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
                           }`}
                         >
                           {count}
-                          <span className="sr-only"> open review requests</span>
+                          <span className="sr-only"> requests need review</span>
                         </span>
                       )}
                     </Link>

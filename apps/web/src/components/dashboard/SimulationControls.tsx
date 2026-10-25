@@ -104,6 +104,10 @@ export function SimulationControls() {
           Reset
         </Button>
       </div>
+      <p className="w-full text-xs text-fg-3">
+        Speed is scenario minutes per real minute: at {speed}×, one real minute plays {speed} minutes of the waiting
+        room. +5 min jumps the clock directly.
+      </p>
       {error && (
         <p role="alert" className="w-full text-xs text-st-urgent">
           {error}

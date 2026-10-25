@@ -1,5 +1,5 @@
 import type { TimelineOut } from "@vigil/contracts";
-import { ALERT_TYPE_LABEL } from "@/lib/monitoring";
+import { ALERT_TYPE_LABEL, OUTCOME_LABEL } from "@/lib/monitoring";
 import { formatClock } from "@/lib/format";
 import { EVENT_LABEL, type VisionEventType } from "@/lib/vision/classifier";
 import { VITAL_BY_KIND } from "@/lib/vitals";
@@ -11,6 +11,12 @@ export type TimelineEntry = {
   title: string;
   detail: string;
   flags: string[];
+};
+
+const ACTION_TITLE: Record<string, string> = {
+  acknowledge: "Request acknowledged",
+  begin_reassessment: "Reassessment started",
+  resolve: "Outcome documented",
 };
 
 /**
@@ -85,8 +91,8 @@ export function buildTimelineEntries(timeline: TimelineOut): TimelineEntry[] {
         key: `act-${act.id}`,
         at: act.timestamp,
         kind: "action",
-        title: act.action === "acknowledge" ? "Alert acknowledged" : "Alert marked reviewed",
-        detail: `${act.actor_simulated}${act.note ? `: “${act.note}”` : ""}`,
+        title: ACTION_TITLE[act.action] ?? act.action,
+        detail: `${act.actor_simulated}${act.outcome ? ` · ${OUTCOME_LABEL[act.outcome]}` : ""}${act.note ? `: “${act.note}”` : ""}`,
         flags: [],
       });
     }

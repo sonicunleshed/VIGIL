@@ -44,6 +44,47 @@ const ROWS: { label: string; hint: string; cell: (d: DetectorMetricsOut) => stri
   },
 ];
 
+/** Headline tradeoffs per strategy. Every figure shows its numerator and denominator. */
+function Summary({ out }: { out: EvaluationOut }) {
+  return (
+    <div className="space-y-3">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {out.detectors.map((d) => (
+          <li key={d.detector} className="rounded-xl border border-card-line p-4">
+            <p className="text-sm font-semibold text-fg">{DETECTOR_TEXT[d.detector] ?? d.detector}</p>
+            <dl className="tabular mt-2 space-y-1.5 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg-2">Scripted changes detected</dt>
+                <dd className="font-semibold text-fg">{formatRatio(d.detected_events, d.deterioration_events)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg-2">Change alerts that were real</dt>
+                <dd className="font-semibold text-fg">{formatRatio(d.true_change_alerts, d.change_alerts)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg-2">False change alerts</dt>
+                <dd className="font-semibold text-fg">{d.false_change_alerts}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg-2">Median delay after onset*</dt>
+                <dd className="font-semibold text-fg">{formatDelay(d.median_delay_seconds)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg-2">All alerts per patient-hour</dt>
+                <dd className="font-semibold text-fg">{d.alerts_per_patient_hour.toFixed(2)}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-fg-3">
+        * Each median is over the events that strategy detected, so strategies are timed on different events. A
+        strategy that catches only the obvious changes can look faster. Not a same-patient race.
+      </p>
+    </div>
+  );
+}
+
 export function EvaluationPanel() {
   const [setIndex, setSetIndex] = useState(0);
   const [data, setData] = useState<{ key: number; out: EvaluationOut } | null>(null);
@@ -91,89 +132,101 @@ export function EvaluationPanel() {
       {!out && !error && <Skeleton className="h-80" />}
       {out && (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <caption className="sr-only">Detector metrics on labelled scenarios</caption>
-              <thead className="text-[11px] uppercase tracking-wide text-fg-3">
-                <tr className="border-b border-line">
-                  <th scope="col" className="py-2 pr-4 font-medium">Metric</th>
-                  {out.detectors.map((d) => (
-                    <th key={d.detector} scope="col" className="px-3 py-2 font-medium">
-                      {DETECTOR_TEXT[d.detector] ?? d.detector}
-                      <span className="block font-normal normal-case tracking-normal text-fg-3">v{d.version}</span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ROWS.map((r) => (
-                  <tr key={r.label} className="border-b border-line/60 align-top last:border-0">
-                    <th scope="row" className="py-2.5 pr-4 font-normal text-fg-2">
-                      {r.label}
-                      <span className="block text-[11px] text-fg-3">{r.hint}</span>
-                    </th>
-                    {out.detectors.map((d) => (
-                      <td key={d.detector} className="tabular px-3 py-2.5 text-fg">
-                        {r.cell(d)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-fg">Per-scenario detection matrix</h3>
-            <p className="text-xs text-fg-3">
-              Cells: labelled events detected / labelled · change alerts (false) · workflow alerts
-            </p>
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="text-[11px] uppercase tracking-wide text-fg-3">
-                  <tr className="border-b border-line">
-                    <th scope="col" className="py-2 pr-4 font-medium">Scenario type</th>
-                    {out.detectors.map((d) => (
-                      <th key={d.detector} scope="col" className="px-3 py-2 font-medium">
-                        {DETECTOR_TEXT[d.detector] ?? d.detector}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {out.per_archetype.map((row) => (
-                    <tr key={row.archetype} className="border-b border-line/60 last:border-0">
-                      <th scope="row" className="py-2 pr-4 font-normal text-fg-2">
-                        {ARCHETYPE_TEXT[row.archetype] ?? row.archetype}
-                        <span className="ml-1 text-[11px] text-fg-3">({row.patients})</span>
-                      </th>
-                      {out.detectors.map((d) => {
-                        const c = row.by_detector[d.detector];
-                        return (
-                          <td key={d.detector} className="tabular px-3 py-2 text-xs text-fg">
-                            {c.labelled_events ? `${c.detected_events}/${c.labelled_events}` : "–"} ·{" "}
-                            <span className={c.false_change_alerts ? "text-st-urgent" : ""}>
-                              {c.change_alerts} ({c.false_change_alerts})
-                            </span>{" "}
-                            · {c.workflow_alerts}
-                          </td>
-                        );
-                      })}
+          <p className="text-sm text-fg-2">
+            Synthetic scenarios ({out.patients} patients, {out.patient_hours} patient-hours, seeds {out.seeds.join(", ")}).
+            Labels are the scenario author&apos;s intent. These are software test results, not clinical validation.
+          </p>
+          <Summary out={out} />
+          <details className="group rounded-xl border border-line">
+            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-fg hover:bg-raised/60">
+              Full metrics, per-scenario matrix and assumptions
+            </summary>
+            <div className="space-y-6 border-t border-line p-4">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <caption className="sr-only">Detector metrics on labelled scenarios</caption>
+                  <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+                    <tr className="border-b border-line">
+                      <th scope="col" className="py-2 pr-4 font-medium">Metric</th>
+                      {out.detectors.map((d) => (
+                        <th key={d.detector} scope="col" className="px-3 py-2 font-medium">
+                          {DETECTOR_TEXT[d.detector] ?? d.detector}
+                          <span className="block font-normal normal-case tracking-normal text-fg-3">v{d.version}</span>
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                  <tbody>
+                    {ROWS.map((r) => (
+                      <tr key={r.label} className="border-b border-line/60 align-top last:border-0">
+                        <th scope="row" className="py-2.5 pr-4 font-normal text-fg-2">
+                          {r.label}
+                          <span className="block text-[11px] text-fg-3">{r.hint}</span>
+                        </th>
+                        {out.detectors.map((d) => (
+                          <td key={d.detector} className="tabular px-3 py-2.5 text-fg">
+                            {r.cell(d)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-fg">Assumptions and denominators</h3>
-            <ul className="mt-1.5 list-inside list-disc space-y-1 text-xs text-fg-2">
-              {out.assumptions.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-          </div>
+              <div>
+                <h3 className="text-sm font-semibold text-fg">Per-scenario detection matrix</h3>
+                <p className="text-xs text-fg-3">
+                  Cells: labelled events detected / labelled · change alerts (false) · workflow alerts
+                </p>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-left text-sm">
+                    <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+                      <tr className="border-b border-line">
+                        <th scope="col" className="py-2 pr-4 font-medium">Scenario type</th>
+                        {out.detectors.map((d) => (
+                          <th key={d.detector} scope="col" className="px-3 py-2 font-medium">
+                            {DETECTOR_TEXT[d.detector] ?? d.detector}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {out.per_archetype.map((row) => (
+                        <tr key={row.archetype} className="border-b border-line/60 last:border-0">
+                          <th scope="row" className="py-2 pr-4 font-normal text-fg-2">
+                            {ARCHETYPE_TEXT[row.archetype] ?? row.archetype}
+                            <span className="ml-1 text-[11px] text-fg-3">({row.patients})</span>
+                          </th>
+                          {out.detectors.map((d) => {
+                            const c = row.by_detector[d.detector];
+                            return (
+                              <td key={d.detector} className="tabular px-3 py-2 text-xs text-fg">
+                                {c.labelled_events ? `${c.detected_events}/${c.labelled_events}` : "–"} ·{" "}
+                                <span className={c.false_change_alerts ? "text-st-urgent" : ""}>
+                                  {c.change_alerts} ({c.false_change_alerts})
+                                </span>{" "}
+                                · {c.workflow_alerts}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-fg">Assumptions and denominators</h3>
+                <ul className="mt-1.5 list-inside list-disc space-y-1 text-xs text-fg-2">
+                  {out.assumptions.map((a) => (
+                    <li key={a}>{a}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </details>
         </>
       )}
     </div>

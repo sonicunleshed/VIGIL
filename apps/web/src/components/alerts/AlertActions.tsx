@@ -5,14 +5,21 @@ import { Check, ClipboardCheck, Stethoscope } from "lucide-react";
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
-import { OUTCOME_LABEL } from "@/lib/monitoring";
+import { nextStep, OUTCOME_LABEL } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
 
 const OUTCOMES = Object.keys(OUTCOME_LABEL) as ReassessmentOutcome[];
 
+const NEXT_TEXT: Record<AlertOut["status"], string> = {
+  open: "acknowledge that you have seen this request",
+  acknowledged: "begin the reassessment",
+  reassessment_started: "document the outcome",
+  resolved: "none",
+};
+
 /**
- * Clinician-controlled lifecycle: acknowledge → begin reassessment → document outcome.
- * Nothing here changes ESI or treatment priority.
+ * Clinician-controlled lifecycle: acknowledge → begin reassessment → document outcome. The next
+ * step is the primary button. Advisory only: nothing here changes ESI or treatment priority.
  */
 export function AlertActions({ alert, size = "md" }: { alert: AlertOut; size?: "sm" | "md" }) {
   const { run } = useVigil();
@@ -46,18 +53,25 @@ export function AlertActions({ alert, size = "md" }: { alert: AlertOut; size?: "
     }
   };
 
+  const next = nextStep(alert.status);
+  const variant = (step: ReturnType<typeof nextStep>, otherwise: "secondary" | "ghost") =>
+    step === next ? "primary" : otherwise;
+
   return (
     <div className="space-y-2">
+      <p className="text-[11px] text-fg-3">
+        Next step: <span className="font-medium text-fg-2">{NEXT_TEXT[alert.status]}</span>
+      </p>
       <div className="flex flex-wrap gap-2">
         {alert.status === "open" && (
-          <Button size={size} icon={Check} disabled={busy} onClick={() => act(() => api.acknowledge(alert.id))}>
+          <Button size={size} variant="primary" icon={Check} disabled={busy} onClick={() => act(() => api.acknowledge(alert.id))}>
             Acknowledge
           </Button>
         )}
         {(alert.status === "open" || alert.status === "acknowledged") && (
           <Button
             size={size}
-            variant="primary"
+            variant={variant("begin_reassessment", "secondary")}
             icon={Stethoscope}
             disabled={busy}
             onClick={() => act(() => api.beginReassessment(alert.id))}
@@ -66,7 +80,14 @@ export function AlertActions({ alert, size = "md" }: { alert: AlertOut; size?: "
           </Button>
         )}
         {!documenting && (
-          <Button size={size} variant="ghost" icon={ClipboardCheck} disabled={busy} onClick={() => setDocumenting(true)}>
+          <Button
+            size={size}
+            variant={variant("resolve", "ghost")}
+            icon={ClipboardCheck}
+            disabled={busy}
+            onClick={() => setDocumenting(true)}
+            title={next === "resolve" ? undefined : "Also available now, e.g. for a duplicate or already-handled request"}
+          >
             Document outcome
           </Button>
         )}

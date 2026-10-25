@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, CameraOff, Cpu, Eye, EyeOff, Lock, Send, Users } from "lucide-react";
+import { ArrowRight, Camera, CameraOff, Cpu, Eye, EyeOff, Lock, Send, Users } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useVigil } from "@/lib/store";
 import { useVisionSession, type SessionState } from "@/lib/vision/useVisionSession";
@@ -130,6 +130,47 @@ function ForwardingControls({
   );
 }
 
+const FLOW = ["Camera observation", "VIGIL event", "Patient timeline", "Nurse review"];
+
+/** What the camera feature does and does not do, stated plainly. */
+function HowItWorks() {
+  return (
+    <Card as="div" aria-label="How VIGIL Vision works" className="space-y-4 px-5 py-4">
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-fg-2" aria-label="From camera to nurse">
+        {FLOW.map((step, i) => (
+          <li key={step} className="inline-flex items-center gap-1.5">
+            {i > 0 && <ArrowRight aria-hidden className="size-3 text-fg-3" />}
+            <span className="rounded-md bg-raised px-2 py-1">{step}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="grid gap-3 text-xs sm:grid-cols-2 xl:grid-cols-1">
+        <div>
+          <p className="font-semibold text-fg">Detects (noisy, from body pose)</p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5 text-fg-2">
+            <li>Someone present or absent</li>
+            <li>Posture change: seated, standing, lying</li>
+            <li>A burst of large movement</li>
+            <li>Fall-like motion (experimental; verify visually)</li>
+          </ul>
+        </div>
+        <div>
+          <p className="font-semibold text-fg">Does not detect</p>
+          <ul className="mt-1 list-inside list-disc space-y-0.5 text-fg-2">
+            <li>Heart rate, breathing rate or any vital sign</li>
+            <li>Who the person is: no face recognition</li>
+            <li>A diagnosis or how unwell someone is</li>
+          </ul>
+        </div>
+      </div>
+      <p className="text-xs text-fg-3">
+        On a phone, browsers only allow the camera over HTTPS. Opening this page at the laptop&apos;s IP over plain
+        HTTP will not work; use the laptop&apos;s own browser, or serve the app over HTTPS.
+      </p>
+    </Card>
+  );
+}
+
 export function VisionView() {
   const camera = useCamera();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -168,7 +209,7 @@ export function VisionView() {
     camera.status === "live" ? "text-st-monitoring" : ["denied", "error", "disconnected"].includes(camera.status) ? "text-st-urgent" : "";
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
       <div className="space-y-4">
         <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-line bg-black">
           <video
@@ -315,6 +356,7 @@ export function VisionView() {
         <Card as="div" aria-label="Camera observations">
           <VisionEventLog events={events} forwarded={session.forwarded} onClear={clearEvents} />
         </Card>
+        <HowItWorks />
       </div>
     </div>
   );

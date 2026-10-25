@@ -1,32 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, PlayCircle, ShieldCheck } from "lucide-react";
+import { ArrowRight, BellRing, Clock, PlayCircle, ShieldCheck, Users } from "lucide-react";
 import { useMemo } from "react";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { PatientStoryCard } from "@/components/patients/PatientStoryCard";
 import { Button, Card, CardHeader, ErrorState, Skeleton } from "@/components/ui/primitives";
-import { formatClock, formatDuration } from "@/lib/format";
+import { formatAge, formatClock, formatDuration } from "@/lib/format";
 import { alertsByPatient, compareAlerts, computeKpis, isUnresolved, lastObservation } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
 import { useSeries } from "@/lib/useSeries";
 
-const NEEDS_ATTENTION_MAX = 4;
-const PREVIEW_MAX = 6;
+const NEEDS_REVIEW_MAX = 4;
+const LEAST_RECENT_MAX = 5;
 
 function Stat({ value, label, href }: { value: string | number; label: string; href?: string }) {
   const body = (
     <>
-      <span className="tabular text-2xl font-semibold text-fg">{value}</span>
-      <span className="text-sm text-fg-3">{label}</span>
+      <span className="tabular block text-2xl font-semibold text-fg">{value}</span>
+      <span className="block text-[13px] text-fg-2">{label}</span>
     </>
   );
+  const cls = "min-w-32 flex-1 rounded-xl border border-card-line bg-surface px-4 py-3 shadow-[var(--card-shadow)]";
   return href ? (
-    <Link href={href} className="flex items-baseline gap-2 rounded-lg hover:underline">
+    <Link href={href} className={`${cls} hover:border-accent`}>
       {body}
     </Link>
   ) : (
-    <span className="flex items-baseline gap-2">{body}</span>
+    <div className={cls}>{body}</div>
   );
 }
 
@@ -36,7 +37,8 @@ export function HomeView() {
   const byPatient = useMemo(() => alertsByPatient(alerts), [alerts]);
   const kpis = useMemo(() => computeKpis(patients, alerts), [patients, alerts]);
 
-  const attention = useMemo(
+  // Patients with an unresolved request, in the same order as the Reassessment Requests page.
+  const flagged = useMemo(
     () =>
       patients
         .map((p) => ({ p, top: (byPatient.get(p.id) ?? []).filter(isUnresolved).sort(compareAlerts)[0] }))
@@ -70,7 +72,7 @@ export function HomeView() {
     return (
       <div className="space-y-6" aria-busy="true" aria-label="Loading">
         <Skeleton className="h-12" />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
         </div>
@@ -80,72 +82,119 @@ export function HomeView() {
 
   return (
     <div className="space-y-8">
-      <section aria-label="Summary" className="flex flex-wrap items-center gap-x-8 gap-y-3">
-        <Stat value={kpis.patientsWaiting} label="waiting" href="/patients" />
-        <Stat value={attention.length} label="need attention" href="/attention" />
-        <Stat value={kpis.reassessing} label="being reassessed" href="/attention" />
-        <Stat value={formatDuration(kpis.medianWaitMinutes)} label="median wait" />
-        <Link href="/simulation" className="tabular text-sm text-fg-3 hover:text-fg hover:underline">
-          {formatClock(simulation.clock)} UTC · scenario {simulation.status}
-        </Link>
+      <section aria-labelledby="intro" className="flex flex-wrap items-end justify-between gap-4">
+        <div className="max-w-2xl">
+          <h2 id="intro" className="text-2xl font-semibold text-fg">
+            Monitoring doesn&apos;t stop after triage.
+          </h2>
+          <p className="mt-1 text-[15px] text-fg-2">
+            VIGIL watches waiting-room observations for changes and asks a clinician to review patients who may
+            need reassessment. It never diagnoses, assigns ESI or reorders the queue.
+          </p>
+        </div>
         <Link
           href="/demo"
-          className="ml-auto inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg hover:bg-accent-hover"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg hover:bg-accent-hover"
         >
           <PlayCircle aria-hidden className="size-4" /> Watch VIGIL in Action
         </Link>
       </section>
 
-      <section aria-labelledby="needs-attention">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 id="needs-attention" className="text-lg font-semibold text-fg">
-            Needs attention
-          </h2>
-          {attention.length > NEEDS_ATTENTION_MAX && (
-            <Link href="/attention" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-              {attention.length - NEEDS_ATTENTION_MAX} more <ArrowRight aria-hidden className="size-3.5" />
-            </Link>
-          )}
+      <section aria-label="Summary" className="space-y-2">
+        <div className="flex flex-wrap gap-3">
+          <Stat value={kpis.patientsWaiting} label="patients waiting" href="/patients" />
+          <Stat value={flagged.length} label="patients with open requests" href="/attention" />
+          <Stat value={kpis.unacknowledgedAlerts} label="requests need review" href="/attention" />
+          <Stat value={kpis.reassessing} label="reassessments in progress" href="/attention" />
+          <Stat value={formatDuration(kpis.medianWaitMinutes)} label="median wait" />
         </div>
-        {attention.length === 0 ? (
-          <p className="flex items-center gap-2 rounded-2xl bg-surface px-5 py-4 text-sm text-fg-2 shadow-[var(--card-shadow)]">
-            <ShieldCheck aria-hidden className="size-4 text-st-monitoring" />
-            No open review requests. That is not a statement that anyone is stable; check how recently
-            each patient was observed below.
-          </p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-            {attention.slice(0, NEEDS_ATTENTION_MAX).map(({ p }) => (
-              <PatientStoryCard key={p.id} patient={p} alerts={byPatient.get(p.id) ?? []} series={series[p.id]} />
-            ))}
-          </div>
-        )}
+        <p className="tabular flex items-center gap-1.5 text-xs text-fg-3">
+          <Clock aria-hidden className="size-3.5" />
+          Scenario time {formatClock(simulation.clock)} UTC · {simulation.status} ·{" "}
+          <Link href="/simulation" className="hover:text-fg hover:underline">
+            Simulation Lab
+          </Link>
+        </p>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-        <Card aria-labelledby="recent-activity">
-          <CardHeader id="recent-activity" title="Recent activity" subtitle="Readings, reports, camera events and reviews" />
-          <ActivityFeed limit={12} />
-        </Card>
-        <section aria-labelledby="live-preview">
-          <div className="mb-3 flex items-baseline justify-between">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <section aria-labelledby="needs-review" className="min-w-0">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
             <div>
-              <h2 id="live-preview" className="text-lg font-semibold text-fg">
-                Live monitoring
+              <h2 id="needs-review" className="text-lg font-semibold text-fg">
+                Needs attention
               </h2>
-              <p className="text-xs text-fg-3">No open requests · least recently observed first</p>
+              <p className="text-xs text-fg-3">Patients with an unresolved request · request order, not treatment priority</p>
             </div>
-            <Link href="/patients" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-              All {patients.length} patients <ArrowRight aria-hidden className="size-3.5" />
-            </Link>
+            {flagged.length > 0 && (
+              <Link href="/attention" className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+                All {flagged.length} <ArrowRight aria-hidden className="size-3.5" />
+              </Link>
+            )}
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {quiet.slice(0, PREVIEW_MAX).map((p) => (
-              <PatientStoryCard key={p.id} patient={p} alerts={byPatient.get(p.id) ?? []} series={series[p.id]} />
-            ))}
-          </div>
+          {flagged.length === 0 ? (
+            <div className="flex items-start gap-2 rounded-2xl bg-surface px-5 py-4 shadow-[var(--card-shadow)]">
+              <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-st-monitoring" />
+              <div>
+                <p className="text-sm font-medium text-fg">No open reassessment requests</p>
+                <p className="text-[13px] text-fg-2">
+                  VIGIL continues to monitor incoming observations; no open alert does not establish clinical
+                  stability. Check when each patient was last observed.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {flagged.slice(0, NEEDS_REVIEW_MAX).map(({ p }) => (
+                <PatientStoryCard key={p.id} patient={p} alerts={byPatient.get(p.id) ?? []} series={series[p.id]} />
+              ))}
+            </div>
+          )}
         </section>
+
+        <div className="min-w-0 space-y-6">
+          <Card aria-labelledby="recent-activity">
+            <CardHeader
+              id="recent-activity"
+              title="Recent activity"
+              subtitle="By observed time. Late deliveries are marked."
+            />
+            <ActivityFeed limit={8} />
+          </Card>
+          <Card aria-labelledby="least-recent">
+            <CardHeader
+              id="least-recent"
+              title="Least recently observed"
+              subtitle="No open request is not the same as fresh data"
+            />
+            <ul className="divide-y divide-line px-5 pb-3">
+              {quiet.slice(0, LEAST_RECENT_MAX).map((p) => {
+                const last = lastObservation(p);
+                return (
+                  <li key={p.id} className="flex items-baseline justify-between gap-3 py-2">
+                    <Link href={`/patients/${p.id}`} className="min-w-0 truncate text-sm text-fg hover:underline">
+                      <span className="font-mono font-semibold">{p.display_code}</span>
+                      <span className="text-fg-3"> · {p.complaint}</span>
+                    </Link>
+                    <span className={`tabular shrink-0 text-xs ${last ? "text-fg-2" : "text-st-gap"}`}>
+                      {last ? formatAge(last.ageSeconds) : "never observed"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        </div>
       </div>
+
+      <nav aria-label="Next" className="flex flex-wrap gap-3">
+        <Link href="/patients" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-4 text-sm text-fg hover:border-accent">
+          <Users aria-hidden className="size-4" /> View all {patients.length} patients
+        </Link>
+        <Link href="/attention" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-4 text-sm text-fg hover:border-accent">
+          <BellRing aria-hidden className="size-4" /> Reassessment requests
+        </Link>
+      </nav>
     </div>
   );
 }

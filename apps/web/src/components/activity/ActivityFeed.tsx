@@ -17,14 +17,17 @@ const STYLE: Record<ActivityOut["kind"], { icon: LucideIcon; cls: string }> = {
   alert_action: { icon: CheckCheck, cls: "text-st-monitoring" },
 };
 
-/** What just happened across the waiting room, newest first. Each source is labelled. */
+/**
+ * What just happened across the waiting room, newest first by when it happened. A reading that
+ * arrived out of order is marked with its arrival time so it never looks like a fresh change.
+ */
 export function ActivityFeed({ limit = 12 }: { limit?: number }) {
   const { data, error, loading } = useLive(`activity:${limit}`, () => api.activity(limit));
   if (error && !data) return <p className="px-5 pb-5 text-xs text-st-urgent">Activity unavailable: {error}</p>;
   if (loading || !data) return <Skeleton className="mx-5 mb-5 h-64" />;
   if (data.items.length === 0) return <EmptyState title="Nothing has happened yet" />;
   return (
-    <ol className="space-y-3 px-5 pb-5" aria-live="polite">
+    <ol className="space-y-3 px-5 pb-5">
       {data.items.map((i) => {
         const s = STYLE[i.kind];
         const Icon = s.icon;
@@ -42,6 +45,11 @@ export function ActivityFeed({ limit = 12 }: { limit?: number }) {
               <p className="tabular truncate text-xs text-fg-3" title={i.detail}>
                 {i.detail}
               </p>
+              {i.late && (
+                <p className="tabular text-xs text-st-gap">
+                  Arrived late at {formatClock(i.received_at)} UTC · out of order, not a new change
+                </p>
+              )}
             </div>
           </li>
         );

@@ -11,6 +11,7 @@ import { STATUS_ORDER } from "@/lib/monitoring";
 import { DEFAULT_FILTERS, filterAndSort, type PatientRow, type QueueFilters, type SortKey } from "@/lib/queue";
 
 const SORT_LABEL: Record<SortKey, string> = {
+  requests_first: "Open requests first",
   waiting_desc: "Longest waiting",
   waiting_asc: "Shortest waiting",
   last_obs_oldest: "Oldest last observation",
@@ -22,7 +23,7 @@ const selectCls = "h-9 rounded-lg border border-line bg-raised px-2 text-sm text
 
 export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highlight: Set<string> }) {
   const router = useRouter();
-  const [f, setF] = useState<QueueFilters>(DEFAULT_FILTERS);
+  const [f, setF] = useState<QueueFilters>({ ...DEFAULT_FILTERS, sort: "requests_first" });
   const visible = useMemo(() => filterAndSort(rows, f), [rows, f]);
   const set = <K extends keyof QueueFilters>(k: K, v: QueueFilters[K]) => setF((s) => ({ ...s, [k]: v }));
 
@@ -31,7 +32,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
       <CardHeader
         id="queue-title"
         title="Waiting-room queue"
-        subtitle="ESI is set at triage and never changed by VIGIL. Monitoring state reflects reassessment alerts only."
+        subtitle="ESI is set at triage and never changed by VIGIL. Observation status reflects open reassessment requests only."
       />
       <div className="flex flex-wrap items-end gap-3 border-b border-line px-5 py-3">
         <div className="relative">
@@ -97,16 +98,16 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
       {visible.length === 0 ? (
         <EmptyState icon={Users} title="No patients match these filters" />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <caption className="sr-only">Waiting-room patients</caption>
-            <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+            <thead className="sticky top-0 z-10 bg-surface text-xs uppercase tracking-wide text-fg-3">
               <tr className="border-b border-line">
                 <th scope="col" className="px-5 py-2.5 font-medium">Patient</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">ESI</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Waiting</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Last observed</th>
-                <th scope="col" className="px-3 py-2.5 font-medium">Monitoring state</th>
+                <th scope="col" className="px-3 py-2.5 font-medium">Observation status</th>
                 <th scope="col" className="px-5 py-2.5 font-medium">
                   <span className="sr-only">Action</span>
                 </th>

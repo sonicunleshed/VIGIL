@@ -69,7 +69,7 @@ describe("buildTimelineEntries", () => {
       ],
     };
     const entries = buildTimelineEntries(timeline);
-    expect(entries.map((e) => e.title)).toEqual(["Alert acknowledged", "Observations received", "Triage observations"]);
+    expect(entries.map((e) => e.title)).toEqual(["Request acknowledged", "Observations received", "Triage observations"]);
     expect(entries[2].detail).toBe("HR 80 bpm · SpO₂ 97%");
     expect(entries[1].flags).toContain("out-of-order delivery");
     expect(entries[0].detail).toBe("nurse-demo-1: “seen”");

@@ -87,6 +87,21 @@ def _base(
         minutes_since_last_reading=((now - last).total_seconds() / 60) if last else None,
         open_alert_count=int(open_alerts or 0),
     )
+    latest: dict[str, Observation] = {}
+    for o in observations:
+        latest[o.kind] = o  # observations are ordered by observed time
+    flagged = [SHORT[k] for k, o in latest.items() if o.quality != "good"]
+    if flagged:
+        ctx.data_notes.append(
+            f"Latest reading flagged questionable by its source: {', '.join(flagged)}."
+        )
+    late = db.scalar(
+        select(func.count())
+        .select_from(Event)
+        .where(Event.patient_id == patient.id, Event.out_of_order.is_(True))
+    )
+    if late:
+        ctx.data_notes.append(f"{late} reading(s) arrived out of order (after a later reading).")
     by_kind: dict[str, list[Observation]] = {}
     for o in observations:
         if o.quality == "good":

@@ -16,6 +16,8 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | 3 | Threshold / trend / hybrid detectors; hybrid drives live alerts | ✅ done |
 | 4 | Live stream + review workflow integration | ✅ done |
 | 5 | Counterfactual replay + evaluation (Insights & Replay screen) | ✅ done |
+| C/D | VIGIL Vision: on-device pose, camera sessions bound to a patient, timeline events | ✅ done |
+| E | Light theme, new navigation, patient story cards, guided demo, reassessment workflow, explanation seam | ✅ done |
 
 ## Quick start
 
@@ -26,8 +28,14 @@ pnpm bootstrap   # pnpm install + uv sync
 pnpm dev         # API on :8000, web on :3000
 ```
 
-Open http://localhost:3000 for the Overview command center; click any patient for the
-longitudinal detail view. On first start the API migrates its SQLite DB
+Open http://localhost:3000. Screens:
+- **Home**: who needs attention, recent activity, least-recently-observed patients.
+- **Live Monitoring**: every patient as a story card, or the full table.
+- **Attention Needed**: review requests. Acknowledge, begin reassessment, document the outcome.
+- **VIGIL Vision**: an optional camera, linked to a patient by staff.
+- **Watch VIGIL in Action**: a guided, reproducible demo.
+- **Simulation Lab**: drive the scenario.
+- **Insights & Replay**: compare strategies on the same data. On first start the API migrates its SQLite DB
 (`services/api/var/vigil.db`) and loads scenario `waiting-room-30` with seed 42: 30 synthetic
 patients already waiting, with their triage vitals as history.
 
@@ -84,6 +92,9 @@ docs/                  Architecture, safety, evaluation, demo
 | GET | `/api/alerts?status=&type=&patient_id=` | |
 | POST | `/api/alerts/{id}/acknowledge` · `/resolve` | Body `{actor_id, note?}`; demo actors only |
 | GET | `/api/audit` | Append-only audit trail |
+| POST | `/api/alerts/{id}/begin-reassessment` | Lifecycle: open → acknowledged → reassessment started → resolved (with outcome) |
+| GET | `/api/alerts/{id}/explanation` · `/api/patients/{id}/explanation` | Provider-agnostic explanations with citations ([docs/EXPLANATIONS.md](docs/EXPLANATIONS.md)) |
+| GET | `/api/patients/series` · `/api/activity` | Sparkline series; recent activity feed |
 | GET | `/api/events/stream` | SSE: `hello`, `observation`, `symptom_report`, `alert_updated`, `simulation`, `reset`, `resync` |
 | GET | `/api/scenarios`, `/api/simulation` | |
 | POST | `/api/simulation/reset` · `start` · `pause` · `step` | Deterministic clock control |

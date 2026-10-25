@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen">
       <a
         href="#main"
-        className="sr-only z-50 rounded bg-accent px-3 py-2 text-bg focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        className="sr-only z-50 rounded bg-accent px-3 py-2 text-accent-fg focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
         Skip to content
       </a>

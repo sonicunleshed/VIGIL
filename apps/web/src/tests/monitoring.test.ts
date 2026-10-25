@@ -49,6 +49,7 @@ describe("computeKpis", () => {
       patientsWaiting: 3,
       activeAlerts: 2,
       unacknowledgedAlerts: 1,
+      reassessing: 0,
       awaitingReassessment: 1,
       medianWaitMinutes: 60,
     });

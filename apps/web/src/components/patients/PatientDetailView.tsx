@@ -11,7 +11,7 @@ import { VitalsCard } from "@/components/patients/VitalsCard";
 import { VitalTrendChart, type ChartMarker } from "@/components/patients/VitalTrendChart";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card, CardHeader, EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
-import { dataLimitations, observationIndex, visionIndex } from "@/lib/evidence";
+import { observationIndex } from "@/lib/evidence";
 import { formatAge, formatClock, formatDuration } from "@/lib/format";
 import { lastObservation, monitoringStatus } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
@@ -24,7 +24,6 @@ const RANGES = [
   { key: "1h", label: "Last 1 h", minutes: 60 },
 ] as const;
 
-const LABELS = Object.fromEntries(VITALS.map((v) => [v.kind, v.label]));
 
 export function PatientDetailView() {
   const params = useParams<{ id: string }>();
@@ -126,7 +125,7 @@ export function PatientDetailView() {
               <dd className="inline text-fg">{formatDuration(detail.minutes_waiting)}</dd>
             </div>
             <div>
-              <dt className="inline text-fg-3">Last observation </dt>
+              <dt className="inline text-fg-3">Last observed </dt>
               <dd className={`inline ${last ? "text-fg" : "text-st-gap"}`}>{last ? formatAge(last.ageSeconds) : "never"}</dd>
             </div>
             <div>
@@ -206,12 +205,7 @@ export function PatientDetailView() {
           </Card>
           <PatientTimeline timeline={timeline} />
         </div>
-        <EvidencePanel
-          alerts={patientAlerts}
-          observations={observations}
-          vision={visionIndex(timeline)}
-          limitations={dataLimitations(detail, timeline, LABELS)}
-        />
+        <EvidencePanel alerts={patientAlerts} patientId={detail.id} />
       </div>
     </div>
   );

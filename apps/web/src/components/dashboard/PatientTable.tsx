@@ -105,7 +105,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
                 <th scope="col" className="px-5 py-2.5 font-medium">Patient</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">ESI</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Waiting</th>
-                <th scope="col" className="px-3 py-2.5 font-medium">Last observation</th>
+                <th scope="col" className="px-3 py-2.5 font-medium">Last observed</th>
                 <th scope="col" className="px-3 py-2.5 font-medium">Monitoring state</th>
                 <th scope="col" className="px-5 py-2.5 font-medium">
                   <span className="sr-only">Action</span>

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Clock, Menu, Search } from "lucide-react";
 import { Suspense, useId, useState, type FormEvent } from "react";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
 import { formatClock } from "@/lib/format";
 import { pageMeta } from "@/lib/routes";
@@ -92,6 +93,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
             {simulation ? `${formatClock(simulation.clock, true)} UTC` : "—"}
           </span>
           <ConnectionStatus state={connection} />
+          <ThemeToggle />
         </div>
       </div>
     </header>

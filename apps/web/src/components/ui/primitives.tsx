@@ -13,7 +13,7 @@ export function Card({
   as?: "section" | "div" | "article";
 } & Record<`aria-${string}`, string>) {
   return (
-    <Tag className={`rounded-xl border border-line bg-surface ${className}`} {...rest}>
+    <Tag className={`rounded-2xl border border-card-line bg-surface shadow-[var(--card-shadow)] ${className}`} {...rest}>
       {children}
     </Tag>
   );
@@ -31,9 +31,9 @@ export function CardHeader({
   id?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+    <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
       <div className="min-w-0">
-        <h2 id={id} className="text-sm font-semibold text-fg">
+        <h2 id={id} className="text-base font-semibold text-fg">
           {title}
         </h2>
         {subtitle ? <p className="mt-0.5 text-xs text-fg-3">{subtitle}</p> : null}
@@ -58,7 +58,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const variants = {
-    primary: "bg-accent text-bg hover:bg-accent-hover border-transparent font-semibold",
+    primary: "bg-accent text-accent-fg hover:bg-accent-hover border-transparent font-semibold",
     secondary: "bg-raised text-fg border-line hover:border-fg-3",
     ghost: "bg-transparent text-fg-2 border-transparent hover:bg-raised hover:text-fg",
   };

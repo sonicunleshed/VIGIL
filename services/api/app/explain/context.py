@@ -45,5 +45,7 @@ class ExplanationContext:
     never_observed: list[str] = field(default_factory=list)
     minutes_since_last_reading: float | None = None
     open_alert_count: int = 0
+    # Data-quality facts worth stating (questionable latest readings, out-of-order arrivals).
+    data_notes: list[str] = field(default_factory=list)
     # Changes when new data arrives or the clock moves; providers that cache must key on it.
     cache_key: str = ""

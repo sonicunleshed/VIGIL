@@ -3,7 +3,7 @@
  * status is a direct, documented mapping of a patient's unresolved alerts, and alerts come only
  * from backend detectors.
  */
-import type { AlertOut, ObservationOut, PatientSummary } from "@vigil/contracts";
+import type { AlertOut, ObservationOut, PatientSummary, ReassessmentOutcome } from "@vigil/contracts";
 
 export type MonitoringStatus = "monitoring" | "reassessment_due" | "urgent_review" | "information_gap";
 
@@ -51,7 +51,7 @@ export const ALERT_SORT_POLICY =
   "Sorted by workflow urgency (prompt review, then review, then routine), then unacknowledged first, then oldest first.";
 
 const URGENCY_RANK: Record<string, number> = { prompt_review: 0, review: 1, routine: 2 };
-const STATUS_RANK: Record<string, number> = { open: 0, acknowledged: 1, resolved: 2 };
+const STATUS_RANK: Record<string, number> = { open: 0, acknowledged: 1, reassessment_started: 2, resolved: 3 };
 
 export function compareAlerts(a: AlertOut, b: AlertOut): number {
   return (
@@ -68,6 +68,20 @@ export const ALERT_TYPE_LABEL: Record<string, string> = {
   DATA_STALE: "Stale data",
   DATA_QUALITY: "Data quality",
   CAMERA_OBSERVATION: "Camera observation",
+};
+
+export const ALERT_STATUS_LABEL: Record<string, string> = {
+  open: "Needs review",
+  acknowledged: "Acknowledged",
+  reassessment_started: "Reassessing",
+  resolved: "Documented",
+};
+
+export const OUTCOME_LABEL: Record<ReassessmentOutcome, string> = {
+  reassessed_no_change: "Reassessed, no change",
+  escalated_to_clinician: "Escalated to clinician",
+  vitals_remeasured: "Vitals re-measured",
+  not_needed: "Not needed (duplicate or resolved)",
 };
 
 export const URGENCY_LABEL: Record<string, string> = {
@@ -96,6 +110,7 @@ export type Kpis = {
   patientsWaiting: number;
   activeAlerts: number;
   unacknowledgedAlerts: number;
+  reassessing: number;
   awaitingReassessment: number;
   medianWaitMinutes: number | null;
 };
@@ -107,6 +122,7 @@ export function computeKpis(patients: PatientSummary[], alerts: AlertOut[]): Kpi
     patientsWaiting: waiting.length,
     activeAlerts: active.length,
     unacknowledgedAlerts: active.filter((a) => a.status === "open").length,
+    reassessing: active.filter((a) => a.status === "reassessment_started").length,
     awaitingReassessment: new Set(active.map((a) => a.patient_id)).size,
     medianWaitMinutes: median(waiting.map((p) => p.minutes_waiting)),
   };

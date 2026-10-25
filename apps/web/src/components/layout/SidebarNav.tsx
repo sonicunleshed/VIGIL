@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Suspense } from "react";
-import { NAV } from "@/lib/routes";
+import { isActive, NAV } from "@/lib/routes";
+import { useVigil } from "@/lib/store";
 
 type Props = {
   collapsed: boolean;
@@ -26,9 +27,8 @@ function SidebarNavWithPath(props: Props) {
 }
 
 function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & { pathname: string | null }) {
-  const isActive = (href: string) =>
-    pathname !== null &&
-    (href === "/" ? pathname === "/" || pathname.startsWith("/patients/") : pathname.startsWith(href));
+  const { alerts } = useVigil();
+  const attention = alerts.filter((a) => a.status !== "resolved").length;
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col">
@@ -58,7 +58,8 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
                 const base = `flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 ${
                   collapsed ? "justify-center" : ""
                 }`;
-                const active = isActive(item.href);
+                const active = isActive(item.href, pathname);
+                const count = item.badge === "attention" ? attention : 0;
                 return (
                   <li key={item.href}>
                     <Link
@@ -70,7 +71,17 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
                       }`}
                     >
                       <Icon aria-hidden className={`size-4 shrink-0 ${active ? "text-accent" : ""}`} />
-                      {collapsed ? <span className="sr-only">{item.label}</span> : item.label}
+                      {collapsed ? <span className="sr-only">{item.label}</span> : <span className="flex-1">{item.label}</span>}
+                      {count > 0 && (
+                        <span
+                          className={`tabular rounded-full bg-st-due/15 px-1.5 text-[11px] font-semibold text-st-due ${
+                            collapsed ? "absolute ml-6 -mt-5" : ""
+                          }`}
+                        >
+                          {count}
+                          <span className="sr-only"> open review requests</span>
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );

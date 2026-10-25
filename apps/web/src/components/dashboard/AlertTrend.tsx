@@ -26,10 +26,10 @@ export function AlertTrend({ alerts, from, to }: { alerts: AlertOut[]; from: str
   const data = bucketAlerts(alerts, from, to);
   return (
     <Card aria-labelledby="alert-trend">
-      <CardHeader id="alert-trend" title="Alerts generated" subtitle={`Per ${BUCKET_MIN} minutes since scenario start`} />
+      <CardHeader id="alert-trend" title="Attention needed over time" subtitle={`Per ${BUCKET_MIN} minutes since scenario start`} />
       <div className="h-40 px-3 py-4">
         {alerts.length === 0 ? (
-          <EmptyState icon={BellOff} title="No alerts generated yet">
+          <EmptyState icon={BellOff} title="No review requests yet">
             Alerts appear here when backend detectors flag an observed change or a data gap.
           </EmptyState>
         ) : (

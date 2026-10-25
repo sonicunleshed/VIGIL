@@ -2,7 +2,7 @@
  * Reading alert evidence and summarising observed data limitations. Everything here restates
  * recorded facts (event ids, timestamps, quality flags); nothing infers clinical meaning.
  */
-import type { AlertOut, ObservationOut, PatientDetail, TimelineOut, VisionEventOut } from "@vigil/contracts";
+import type { AlertOut, ObservationOut, TimelineOut } from "@vigil/contracts";
 
 /**
  * Expected `evidence_json` shape from detectors (see docs/ARCHITECTURE.md). Fields are optional and
@@ -36,34 +36,4 @@ export function observationIndex(timeline: TimelineOut | null): Map<string, Obse
     if (item.item_type === "observation") map.set(item.observation.id, item.observation);
   }
   return map;
-}
-
-export function visionIndex(timeline: TimelineOut | null): Map<string, VisionEventOut> {
-  const map = new Map<string, VisionEventOut>();
-  for (const item of timeline?.items ?? []) {
-    if (item.item_type === "vision_observation") map.set(item.vision.id, item.vision);
-  }
-  return map;
-}
-
-/** Plain-language list of what the data cannot tell us right now. */
-export function dataLimitations(detail: PatientDetail, timeline: TimelineOut | null, labels: Record<string, string>) {
-  const out: string[] = [];
-  const never = Object.entries(detail.latest)
-    .filter(([, v]) => v == null)
-    .map(([k]) => labels[k] ?? k);
-  if (never.length) out.push(`Never observed: ${never.join(", ")}.`);
-  const questionable = Object.entries(detail.latest)
-    .filter(([, v]) => v?.quality === "questionable")
-    .map(([k]) => labels[k] ?? k);
-  if (questionable.length) out.push(`Latest reading flagged questionable by its source: ${questionable.join(", ")}.`);
-  const ooo = (timeline?.items ?? []).filter((i) => i.item_type === "observation" && i.out_of_order).length;
-  if (ooo) out.push(`${ooo} observation${ooo === 1 ? "" : "s"} arrived out of order (delivered after a later reading).`);
-  const ages = Object.values(detail.latest).flatMap((v) => (v ? [v.age_seconds] : []));
-  if (ages.length) {
-    const oldest = Math.max(...ages);
-    out.push(`Oldest of the latest values is ${Math.floor(oldest / 60)} min old. Values may have changed since.`);
-  }
-  out.push("Readings are intermittent, not continuous monitoring.");
-  return out;
 }

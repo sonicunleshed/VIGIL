@@ -38,6 +38,13 @@ export type VisionSessionCreatedOut = Schemas["VisionSessionCreatedOut"];
 export type VisionEventIn = Schemas["VisionEventIn"];
 export type VisionEventOut = Schemas["VisionEventOut"];
 export type VisionIngestResult = Schemas["VisionIngestResult"];
+export type ExplanationOut = Schemas["ExplanationOut"];
+export type ExplanationSectionOut = Schemas["ExplanationSectionOut"];
+export type PatientSeriesOut = Schemas["PatientSeriesOut"];
+export type SeriesPointOut = Schemas["SeriesPointOut"];
+export type ActivityOut = Schemas["ActivityOut"];
+export type ActivityFeedOut = Schemas["ActivityFeedOut"];
+export type ReassessmentOutcome = Schemas["ReassessmentOutcome"];
 
 /** Server-sent event names emitted by GET /api/events/stream. */
 export type StreamEventType =

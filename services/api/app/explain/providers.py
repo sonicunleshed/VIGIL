@@ -76,6 +76,7 @@ class TemplateProvider:
             sections.append(
                 Section("what_is_missing", f"Never recorded: {', '.join(ctx.never_observed)}.")
             )
+        sections += [Section("what_is_missing", n) for n in ctx.data_notes]
         if ctx.minutes_since_last_reading is not None:
             sections.append(
                 Section(

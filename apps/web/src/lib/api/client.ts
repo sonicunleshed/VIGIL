@@ -1,6 +1,11 @@
 import type {
+  ActivityFeedOut,
   AlertOut,
   AlertsOut,
+  ExplanationOut,
+  ObservationKind,
+  PatientSeriesOut,
+  ReassessmentOutcome,
   EvaluationOut,
   ReplayCatalogOut,
   ReplayCompareOut,
@@ -66,8 +71,16 @@ export const api = {
   simulation: () => request<SimulationStateOut>("/api/simulation"),
   acknowledge: (alertId: string, note?: string) =>
     post<AlertOut>(`/api/alerts/${alertId}/acknowledge`, { actor_id: DEMO_ACTOR, note }),
-  resolve: (alertId: string, note?: string) =>
-    post<AlertOut>(`/api/alerts/${alertId}/resolve`, { actor_id: DEMO_ACTOR, note }),
+  beginReassessment: (alertId: string, note?: string) =>
+    post<AlertOut>(`/api/alerts/${alertId}/begin-reassessment`, { actor_id: DEMO_ACTOR, note }),
+  resolve: (alertId: string, outcome?: ReassessmentOutcome, note?: string) =>
+    post<AlertOut>(`/api/alerts/${alertId}/resolve`, { actor_id: DEMO_ACTOR, note, outcome }),
+  alertExplanation: (alertId: string) => request<ExplanationOut>(`/api/alerts/${alertId}/explanation`),
+  patientExplanation: (patientId: string) =>
+    request<ExplanationOut>(`/api/patients/${encodeURIComponent(patientId)}/explanation`),
+  series: (kinds: ObservationKind[]) =>
+    request<PatientSeriesOut>(`/api/patients/series?kinds=${kinds.join(",")}`),
+  activity: (limit: number) => request<ActivityFeedOut>(`/api/activity?limit=${limit}`),
   start: (speed: number) => post<SimulationStateOut>("/api/simulation/start", { speed }),
   pause: () => post<SimulationStateOut>("/api/simulation/pause"),
   step: (minutes: number) => post<StepResult>("/api/simulation/step", { minutes }),

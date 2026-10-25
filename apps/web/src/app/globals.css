@@ -1,17 +1,44 @@
 @import "tailwindcss";
 
-/* Design tokens — VIGIL UI spec §4. Dark operations theme only. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Design tokens. Light clinical theme by default; dark is an opt-in via [data-theme="dark"]. */
 :root {
+  --bg: #f7f9fc;
+  --sidebar: #ffffff;
+  --surface: #ffffff;
+  --raised: #eef2f7;
+  --border: #e3e8ef;
+  --card-border: #e9edf3;
+  --card-shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.04);
+  --text: #172033;
+  --text-2: #475467;
+  --text-3: #667085;
+  --accent: #0d9488;
+  --accent-hover: #0f766e;
+  --accent-fg: #ffffff;
+  --st-monitoring: #0f766e;
+  --st-due: #b54708;
+  --st-urgent: #b42318;
+  --st-info: #175cd3;
+  --st-gap: #6941c6;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
   --bg: #080d16;
   --sidebar: #0d1420;
   --surface: #111b2a;
   --raised: #192638;
   --border: #243247;
+  --card-border: #243247;
+  --card-shadow: none;
   --text: #f1f5f9;
   --text-2: #94a3b8;
-  --text-3: #64748b;
+  --text-3: #8492a6;
   --accent: #2dd4bf;
   --accent-hover: #5eead4;
+  --accent-fg: #080d16;
   --st-monitoring: #2dd4bf;
   --st-due: #fbbf24;
   --st-urgent: #f87171;
@@ -31,6 +58,8 @@
   --color-fg-3: var(--text-3);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-card-line: var(--card-border);
   --color-st-monitoring: var(--st-monitoring);
   --color-st-due: var(--st-due);
   --color-st-urgent: var(--st-urgent);

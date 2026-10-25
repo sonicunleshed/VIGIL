@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -17,6 +18,7 @@ from app.api import alerts, evaluation, ingest, patients, simulation, stream, vi
 from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory, run_migrations, write_lock
 from app.errors import DomainError
+from app.explain import service as explain_service
 from app.runtime import Runtime
 from app.schemas.outputs import HealthOut
 from app.services import simulation as sim_service
@@ -35,6 +37,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         runtime = Runtime(settings, make_session_factory(engine))
         runtime.broker.bind_loop(asyncio.get_running_loop())
         app.state.runtime = runtime
+        if local_model := explain_service.configure(settings):
+            # Load the model in the background so the first explanation is not slow.
+            threading.Thread(target=local_model.warm_up, name="llm-warmup", daemon=True).start()
+            log.info("explanations: local model %s at %s", local_model.model, local_model.url)
         with write_lock, runtime.session_factory() as db:
             # A fresh process has no runner task, so a persisted "running" state would be a lie.
             if sim_service.pause_stale_run(db):

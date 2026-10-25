@@ -44,6 +44,12 @@ patients already waiting, with their triage vitals as history.
 
 Run one uvicorn worker only: the SSE broker is in-process.
 
+**Local AI explanations (optional).** With [Ollama](https://ollama.com) installed, run
+`ollama pull qwen3:4b-instruct` once and start with `pnpm dev:llm`. The "What changed" part of
+each explanation is then drafted by the local model, checked against the recorded data, and
+labelled as an AI draft; anything that fails a check falls back to the rule-based text. Nothing
+leaves the machine. See [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md).
+
 **VIGIL Vision** (`/vision`) runs pose estimation in the browser. `pnpm dev` and `pnpm build`
 install its assets automatically (MediaPipe WASM from npm, plus the 5.8 MB pose model downloaded
 once and checksum-verified into `apps/web/public/models/`). Run `pnpm --filter web vision:setup`

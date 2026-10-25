@@ -30,6 +30,10 @@ class Settings:
     cors_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000")
     # Explanation provider name (see app/explain). "template" is rule-based and always available.
     explainer: str = os.environ.get("VIGIL_EXPLAINER", "template")
+    # Local model for explanation drafts (VIGIL_EXPLAINER=local-llm). Must be a loopback URL.
+    llm_url: str = os.environ.get("VIGIL_LLM_URL", "http://127.0.0.1:11434")
+    llm_model: str = os.environ.get("VIGIL_LLM_MODEL", "qwen3:4b-instruct")
+    llm_timeout_seconds: float = float(os.environ.get("VIGIL_LLM_TIMEOUT", "30"))
     # Wall-clock seconds between simulation ticks while running.
     tick_seconds: float = 0.5
     # Accept observations timestamped at most this far ahead of the simulation clock.

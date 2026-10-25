@@ -8,19 +8,34 @@ from datetime import UTC, datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import Settings
 from app.domain import AlertStatus, ObservationKind
 from app.errors import NotFound
 from app.explain.context import ExplanationContext, Fact, Subject
 from app.explain.guard import GuardError, check
-from app.explain.providers import ExplanationProvider, TemplateProvider
+from app.explain.local_model import NAME as LOCAL_NAME
+from app.explain.local_model import LocalModelProvider
+from app.explain.providers import ExplanationProvider, ProviderError, TemplateProvider
 from app.models import Alert, Event, Observation, Patient, SymptomReport, VisionEvent
 from app.schemas.outputs import ExplanationOut, ExplanationSectionOut
 
 log = logging.getLogger("vigil.explain")
 
 TEMPLATE = TemplateProvider()
-# Register additional providers here (e.g. a local language model). See docs/EXPLANATIONS.md.
+# Other providers (the local model) are registered at startup by `configure`.
 PROVIDERS: dict[str, ExplanationProvider] = {TEMPLATE.name: TEMPLATE}
+
+
+def configure(settings: Settings) -> LocalModelProvider | None:
+    """Registers the local model provider when it is the configured explainer."""
+    if settings.explainer != LOCAL_NAME:
+        return None
+    provider = LocalModelProvider(
+        settings.llm_url, settings.llm_model, settings.llm_timeout_seconds
+    )
+    PROVIDERS[LOCAL_NAME] = provider
+    return provider
+
 
 SHORT = {"heart_rate": "HR", "resp_rate": "RR", "spo2": "SpO2", "sbp": "SBP", "temp": "Temp"}
 
@@ -124,6 +139,7 @@ def alert_context(db: Session, alert_id: str, now: datetime) -> ExplanationConte
     assert patient is not None
     ctx = _base(db, patient, "alert", alert.id, now)
     ev = alert.evidence_json or {}
+    ctx.alert_type = alert.type
     ctx.alert_summary = alert.summary
     ctx.alert_event_ids = [i for i in ev.get("event_ids", []) if isinstance(i, str)]
     ctx.alert_rules = [r for r in ev.get("rules", []) if isinstance(r, str)]
@@ -144,11 +160,19 @@ def explain(ctx: ExplanationContext, provider_name: str) -> ExplanationOut:
     provider = PROVIDERS.get(provider_name)
     fallback_reason: str | None = None if provider else f"unknown provider '{provider_name}'"
     sections = None
+    # A provider may decline a subject (the local model leaves data-quality alerts to the
+    # template); that is a choice, not a failure, so no fallback reason is shown.
+    applies = getattr(provider, "applies_to", None)
+    if provider is not None and applies is not None and not applies(ctx):
+        provider = TEMPLATE
     if provider is not None and provider is not TEMPLATE:
         try:
             sections = check(provider.explain(ctx), ctx)
         except GuardError as exc:
             fallback_reason = f"provider output rejected: {exc}"
+        except ProviderError as exc:
+            log.info("explanation provider %s fell back: %s", provider_name, exc)
+            fallback_reason = str(exc)
         except Exception as exc:  # a broken local model must never break the screen
             log.warning("explanation provider %s failed: %s", provider_name, exc)
             fallback_reason = f"provider unavailable: {type(exc).__name__}"

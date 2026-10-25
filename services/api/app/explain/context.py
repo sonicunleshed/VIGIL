@@ -36,6 +36,7 @@ class ExplanationContext:
     # Facts a provider may cite, keyed by id. Anything else is rejected by the guard.
     facts: dict[str, Fact] = field(default_factory=dict)
     # Alert subject only.
+    alert_type: str | None = None
     alert_summary: str | None = None
     alert_event_ids: list[str] = field(default_factory=list)
     alert_rules: list[str] = field(default_factory=list)

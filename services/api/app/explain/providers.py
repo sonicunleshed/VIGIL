@@ -19,6 +19,15 @@ WORKFLOW_TEXT = {
 }
 
 
+# Individually listed evidence readings per alert explanation.
+MAX_EVIDENCE = 8
+
+
+class ProviderError(Exception):
+    """A provider could not produce a usable explanation. The message is shown to clinicians as
+    the reason for falling back to the rule-based explanation, so keep it short and plain."""
+
+
 class ExplanationProvider(Protocol):
     name: str
     version: str
@@ -49,7 +58,14 @@ class TemplateProvider:
     def _alert(self, ctx: ExplanationContext) -> list[Section]:
         cited = [i for i in ctx.alert_event_ids if i in ctx.facts]
         sections = [Section("what_changed", ctx.alert_summary or "", tuple(cited))]
-        for i in cited:
+        # Most recent readings individually; the rest in one line, so the section cap holds.
+        shown = cited[-MAX_EVIDENCE:]
+        rest = cited[: len(cited) - len(shown)]
+        if rest:
+            sections.append(
+                Section("evidence", f"{len(rest)} earlier cited readings.", tuple(rest))
+            )
+        for i in shown:
             sections.append(Section("evidence", ctx.facts[i].text, (i,)))
         if ctx.alert_rules:
             sections.append(

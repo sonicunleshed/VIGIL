@@ -113,6 +113,12 @@ export function ExplanationPanel({
     subject === "alert" ? api.alertExplanation(id) : api.patientExplanation(id),
   );
   if (error && !data) return <p className="text-xs text-st-urgent">Explanation unavailable: {error}</p>;
-  if (loading || !data) return <Skeleton className="h-24" />;
+  if (loading || !data)
+    return (
+      <div role="status" className="space-y-2">
+        <Skeleton className="h-16" />
+        <p className="text-xs text-fg-3">Preparing explanation…</p>
+      </div>
+    );
   return <ExplanationView e={data} compact={compact} />;
 }

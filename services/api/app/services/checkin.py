@@ -7,6 +7,9 @@
 - Reports sent with a code use the normal symptom-report ingest. The code must belong to the
   report's patient, the source is always `patient_checkin` and the report time is the simulation
   clock on arrival. A report without a code may not claim that source.
+- The phone asks again after `checkin_reminder_minutes` of simulation time since the code was
+  created or the patient's last check-in report. Dismissing a reminder stays on the phone; it is
+  never recorded or shown to staff, and an unanswered reminder raises nothing.
 """
 
 from __future__ import annotations
@@ -16,12 +19,12 @@ import secrets
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domain import SYMPTOM_TAGS, CheckinTokenStatus
 from app.errors import Forbidden, Invalid, NotFound, Unauthorized
-from app.models import CheckinToken, Patient
+from app.models import CheckinToken, Patient, SymptomReport
 from app.schemas.inputs import CheckinTokenIn, SymptomReportIn
 from app.schemas.outputs import CheckinSessionOut, CheckinTokenOut
 from app.services import audit
@@ -146,14 +149,26 @@ def check_report(body: SymptomReportIn, code: CheckinToken | None) -> None:
         raise Invalid("reported_at and scenario_id are set by the server for check-in reports")
 
 
-def session_out(db: Session, code: CheckinToken) -> CheckinSessionOut:
+def session_out(
+    db: Session, code: CheckinToken, now: datetime, remind_every: timedelta
+) -> CheckinSessionOut:
     patient = db.get(Patient, code.patient_id)
     assert patient is not None
+    last_report = db.scalar(
+        select(func.max(SymptomReport.received_at)).where(
+            SymptomReport.patient_id == code.patient_id,
+            SymptomReport.source == SOURCE,
+            SymptomReport.received_at >= code.issued_at,
+        )
+    )
     return CheckinSessionOut(
         patient_id=patient.id,
         display_code=patient.display_code,
         expires_at=code.expires_at,
         structured_tags=sorted(SYMPTOM_TAGS),
+        now=now,
+        remind_every_minutes=int(remind_every.total_seconds() // 60),
+        remind_at=(last_report or code.issued_at) + remind_every,
     )
 
 

@@ -498,9 +498,25 @@
             "title": "Expires At",
             "type": "string"
           },
+          "now": {
+            "description": "Simulation clock; the phone times reminders against it.",
+            "format": "date-time",
+            "title": "Now",
+            "type": "string"
+          },
           "patient_id": {
             "title": "Patient Id",
             "type": "string"
+          },
+          "remind_at": {
+            "description": "When the page next asks whether anything changed: the code's creation or the patient's latest check-in report under it, plus `remind_every_minutes`.",
+            "format": "date-time",
+            "title": "Remind At",
+            "type": "string"
+          },
+          "remind_every_minutes": {
+            "title": "Remind Every Minutes",
+            "type": "integer"
           },
           "structured_tags": {
             "description": "Tags a report may carry, sorted.",
@@ -515,7 +531,10 @@
           "patient_id",
           "display_code",
           "expires_at",
-          "structured_tags"
+          "structured_tags",
+          "now",
+          "remind_every_minutes",
+          "remind_at"
         ],
         "title": "CheckinSessionOut",
         "type": "object"
@@ -3514,6 +3533,7 @@
     },
     "/api/checkin/session": {
       "get": {
+        "description": "The phone polls this: it also learns the simulation clock and when to remind the patient.",
         "operationId": "session_api_checkin_session_get",
         "parameters": [
           {

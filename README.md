@@ -26,7 +26,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | E | Light theme, new navigation, patient story cards, guided demo, reassessment workflow, explanation seam | ✅ done |
 | F | Polish: WCAG AA colour contrast, 12 px minimum text, recovering error states, gzip, lightweight sparklines, local AI explanation drafts, screenshots | ✅ done |
 | E.2 | Clarity pass: self-explaining Home, separate observation/workflow status, next-step actions, 7-step demo with nurse review, results summary, late-delivery marking | ✅ done |
-| G | Patient check-in: a QR code per patient, a phone page with the symptom tags as big buttons, reports through the existing symptom-report endpoint | ✅ done |
+| G | Patient check-in: a QR code per patient, a phone page with the symptom tags as big buttons, reports through the existing symptom-report endpoint, in-page reminders on the simulation clock | ✅ done |
 
 ## Quick start
 
@@ -71,7 +71,10 @@ on the same Wi-Fi scans it and opens `/checkin` on this machine's network addres
 automatically; set `VIGIL_CHECKIN_ORIGIN` to override, e.g. for a hostname or tunnel). The phone
 reaches the API through the web server, which forwards only the two check-in calls and only when
 they carry a code. Codes expire 4 h after creation on the simulation clock, and a new code
-replaces the patient's old one. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#patient-check-in).
+replaces the patient's old one. While the page is open it asks "has anything changed?" every
+30 simulated minutes (banner, vibration on Android, optional chime); "Nothing new" stays on the
+phone. Reminders follow the scenario clock, so they pause while the simulation does. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#patient-check-in).
 
 ## Checks
 
@@ -132,7 +135,7 @@ docs/                  Architecture, safety, evaluation, demo
 | POST | `/api/vision/sessions/{id}/stop` · GET `…/events` · GET `/api/vision/sessions` | |
 | POST | `/api/checkin/tokens` | Staff create a patient's check-in code; returns the token once; replaces any active code |
 | GET | `/api/checkin/tokens?patient_id=&active=` · POST `…/{id}/revoke` | Codes without their token; revoking is audited |
-| GET | `/api/checkin/session` | For the phone (`X-Checkin-Token`): patient code, expiry, allowed tags |
+| GET | `/api/checkin/session` | For the phone (`X-Checkin-Token`): patient code, expiry, allowed tags, simulation clock and next reminder |
 
 Interactive docs: http://localhost:8000/docs. See [docs/EVALUATION.md](docs/EVALUATION.md) for definitions and a held-out snapshot.
 

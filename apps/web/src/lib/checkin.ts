@@ -12,6 +12,8 @@ import { ApiError } from "@/lib/api/client";
 export const CHECKIN_SOURCE = "patient_checkin";
 export const CHECKIN_HEADER = "X-Checkin-Token";
 export const NOTE_MAX = 280;
+/** How often the open page asks the server for the simulation clock and the next reminder. */
+export const POLL_MS = 20_000;
 
 /** Patient-facing wording for report tags, in display order. Plain language, no clinical terms. */
 export const CHECKIN_TAG_LABEL: Record<string, string> = {
@@ -45,6 +47,16 @@ export function checkinLink(origin: string, token: string): string {
 export function tokenFromHash(hash: string): string | null {
   const token = hash.replace(/^#/, "").trim();
   return /^[A-Za-z0-9_-]{20,}$/.test(token) ? token : null;
+}
+
+/**
+ * Whether the page should ask the patient now. The server says when, on the simulation clock.
+ * "Nothing new" is remembered on the phone only and postpones the next ask by one interval.
+ */
+export function reminderDue(session: CheckinSessionOut, dismissedAt: string | null): boolean {
+  const now = Date.parse(session.now);
+  const snoozedUntil = dismissedAt ? Date.parse(dismissedAt) + session.remind_every_minutes * 60_000 : -Infinity;
+  return now >= Math.max(Date.parse(session.remind_at), snoozedUntil);
 }
 
 /** UUID v4. `crypto.randomUUID` needs a secure context, which a phone on plain-HTTP LAN is not. */

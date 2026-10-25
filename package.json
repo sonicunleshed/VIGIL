@@ -7,7 +7,7 @@
     "bootstrap": "pnpm install && uv sync --project services/api",
     "dev": "concurrently -k -n api,web -c blue,green \"pnpm dev:api\" \"pnpm --filter web dev\"",
     "dev:llm": "VIGIL_EXPLAINER=local-llm pnpm dev",
-    "dev:api": "cd services/api && uv run uvicorn app.main:app --port 8000 --reload --reload-dir app",
+    "dev:api": "cd services/api && uv run uvicorn app.main:app --port 8000 --reload --reload-dir app --timeout-graceful-shutdown 2",
     "test": "pnpm test:api && pnpm --filter web test",
     "test:api": "cd services/api && uv run pytest",
     "lint": "pnpm lint:api && pnpm --filter web lint",

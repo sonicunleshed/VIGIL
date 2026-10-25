@@ -9,6 +9,7 @@ import {
   checkinLink,
   newEventId,
   orderTags,
+  reminderDue,
   tagLabel,
   tokenFromHash,
 } from "@/lib/checkin";
@@ -20,7 +21,29 @@ const SESSION: CheckinSessionOut = {
   display_code: "WR-07",
   expires_at: "2026-01-15T18:00:00Z",
   structured_tags: ["bleeding", "breathing_harder", "feeling_better", "other", "pain_worse"],
+  now: "2026-01-15T14:00:00Z",
+  remind_every_minutes: 30,
+  remind_at: "2026-01-15T14:30:00Z",
 };
+const at = (now: string, over: Partial<CheckinSessionOut> = {}): CheckinSessionOut => ({ ...SESSION, now, ...over });
+
+describe("check-in reminders", () => {
+  it("is due once the simulation clock reaches the server's reminder time", () => {
+    expect(reminderDue(at("2026-01-15T14:29:59Z"), null)).toBe(false);
+    expect(reminderDue(at("2026-01-15T14:30:00Z"), null)).toBe(true);
+  });
+
+  it("'Nothing new' postpones the next ask by one interval from the dismissal", () => {
+    const dismissed = "2026-01-15T14:31:00Z";
+    expect(reminderDue(at("2026-01-15T15:00:59Z"), dismissed)).toBe(false);
+    expect(reminderDue(at("2026-01-15T15:01:00Z"), dismissed)).toBe(true);
+  });
+
+  it("a later report moves the reminder past an older dismissal", () => {
+    const s = at("2026-01-15T15:05:00Z", { remind_at: "2026-01-15T15:20:00Z" });
+    expect(reminderDue(s, "2026-01-15T14:31:00Z")).toBe(false);
+  });
+});
 
 describe("check-in helpers", () => {
   it("has patient wording for every tag the API accepts", () => {
@@ -223,5 +246,112 @@ describe("CheckinView", () => {
     await act(async () => {});
     await waitFor(() => expect(screen.getByText("This check-in code isn’t working")).toBeTruthy());
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  describe("reminders", () => {
+    let current: CheckinSessionOut;
+    let revoked: boolean;
+    let vibrateSpy: ReturnType<typeof vi.fn>;
+    let notes: number;
+
+    class FakeAudioContext {
+      currentTime = 0;
+      destination = {};
+      resume = () => Promise.resolve();
+      createOscillator() {
+        return { type: "", frequency: { value: 0 }, connect: (n: unknown) => n, start: () => (notes += 1), stop: () => {} };
+      }
+      createGain() {
+        return { gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} }, connect: (n: unknown) => n };
+      }
+    }
+
+    // The page also polls every 20 s; coming back to the tab triggers the same refresh at once.
+    const poll = async (now: string, over: Partial<CheckinSessionOut> = {}) => {
+      current = at(now, over);
+      await act(async () => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+    };
+    const banner = () => screen.queryByText("Time for a quick check-in");
+
+    beforeEach(() => {
+      document.title = "Waiting room check-in";
+      current = SESSION;
+      revoked = false;
+      notes = 0;
+      vibrateSpy = vi.fn();
+      Object.defineProperty(navigator, "vibrate", { configurable: true, value: vibrateSpy });
+      Object.defineProperty(window, "AudioContext", { configurable: true, value: FakeAudioContext });
+      fetchSpy.mockImplementation((url: string) => {
+        if (revoked) return json(401);
+        if (url === "/api/checkin/session") return json(200, current);
+        current = at(current.now, { remind_at: "2026-01-15T15:00:00Z" }); // the report resets the timer
+        return json(201);
+      });
+    });
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "vibrate");
+      Reflect.deleteProperty(window, "AudioContext");
+      document.title = "";
+    });
+
+    it("asks when the server says so, and 'Nothing new' sends nothing", async () => {
+      render(<CheckinView />);
+      await screen.findByText("WR-07");
+      expect(banner()).toBeNull();
+
+      await poll("2026-01-15T14:30:00Z");
+      expect(banner()).toBeTruthy();
+      expect(vibrateSpy).toHaveBeenCalledTimes(1);
+      expect(document.title).toBe("(1) Waiting room check-in");
+
+      fireEvent.click(screen.getByRole("button", { name: "Nothing new" }));
+      expect(banner()).toBeNull();
+      expect(document.title).toBe("Waiting room check-in");
+      expect(sentBodies()).toEqual([]);
+
+      await poll("2026-01-15T14:59:00Z");
+      expect(banner()).toBeNull();
+      await poll("2026-01-15T15:00:00Z");
+      expect(banner()).toBeTruthy();
+      expect(vibrateSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("counts an update as the answer", async () => {
+      current = at("2026-01-15T14:30:00Z");
+      render(<CheckinView />);
+      fireEvent.click(await screen.findByRole("button", { name: "Bleeding" }));
+      expect(banner()).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Send to the nurse" }));
+      await screen.findByText("Sent to the nursing team");
+      expect(banner()).toBeNull();
+    });
+
+    it("plays a chime only after the patient turns sound on", async () => {
+      current = at("2026-01-15T14:30:00Z");
+      render(<CheckinView />);
+      await screen.findByText("Time for a quick check-in");
+      expect(notes).toBe(0); // sound is off by default
+
+      fireEvent.click(screen.getByRole("button", { name: "Nothing new" }));
+      const toggle = screen.getByRole("switch", { name: /Remind me with a sound/ }) as HTMLInputElement;
+      fireEvent.click(toggle);
+      expect(toggle.checked).toBe(true);
+      expect(notes).toBe(2); // a preview, so they know it works
+
+      await poll("2026-01-15T15:00:00Z");
+      expect(banner()).toBeTruthy();
+      expect(notes).toBe(4);
+    });
+
+    it("notices on the next poll when staff cancel the code", async () => {
+      render(<CheckinView />);
+      await screen.findByText("WR-07");
+      revoked = true;
+      await poll("2026-01-15T14:10:00Z");
+      expect(screen.getByText("This check-in code isn’t working")).toBeTruthy();
+      expect(screen.queryByRole("switch")).toBeNull();
+    });
   });
 });

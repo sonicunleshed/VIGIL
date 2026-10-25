@@ -62,6 +62,9 @@ def revoke_token(
     response_model=CheckinSessionOut,
     responses={401: {"description": "Missing, unknown, revoked, replaced or expired code"}},
 )
-def session(db: DbDep, token: CheckinTokenHeader = None) -> CheckinSessionOut:
-    code = checkin.authorize(db, token, simulation.clock(db))
-    return checkin.session_out(db, code)
+def session(db: DbDep, runtime: RuntimeDep, token: CheckinTokenHeader = None) -> CheckinSessionOut:
+    """The phone polls this: it also learns the simulation clock and when to remind the patient."""
+    now = simulation.clock(db)
+    code = checkin.authorize(db, token, now)
+    remind_every = timedelta(minutes=runtime.settings.checkin_reminder_minutes)
+    return checkin.session_out(db, code, now, remind_every)

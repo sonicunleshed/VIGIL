@@ -46,4 +46,5 @@ are scenario-author intent.
 | Stale data | Explicit ages and unknown states; separate reminder type |
 | Reproducibility | Seeded generator, UUIDv5 ids, sim clock, fixture equality test |
 | Phone check-in relied on instead of staff | The page always says to tell staff if the patient feels much worse, confirms only what was sent, and never reassures or mentions priority |
+| Reminder answers read as status | "Nothing new" never leaves the phone and an ignored reminder raises nothing, so silence or "nothing new" can never appear to staff as "stable"; sound is off by default in a shared waiting room |
 | Check-in spam or a shared code | One active code per patient, server-side patient match, 4 reports per 5 min per code, staff can cancel a code; every report is labelled "sent from patient's phone" |

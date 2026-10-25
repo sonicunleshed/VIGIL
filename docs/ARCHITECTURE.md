@@ -208,6 +208,17 @@ A patient (or whoever is with them) can tell staff that something changed, from 
   a well-formed `X-Checkin-Token`. The header rule has a value pattern on purpose: without one,
   Next copies the header into the forwarded query string and the code would reach access logs.
   `allowedDevOrigins` lists the machine's LAN addresses so the dev server serves a phone.
+- Reminders: while the page is open it polls `GET /api/checkin/session` every 20 s (and when the
+  tab becomes visible again). The response carries the simulation clock (`now`) and `remind_at`:
+  the code's creation or the patient's latest check-in report under it, plus
+  `checkin_reminder_minutes` (30, a demo setting). When due, the page shows a "Time for a quick
+  check-in" banner, prefixes the tab title with "(1)", vibrates (Android only) and, if the
+  patient switched sound on, plays a Web Audio chime (`lib/chime.ts`; sound can only start after
+  a tap, so switching it on unlocks audio and plays a preview). "Nothing new" is kept on the phone
+  only and postpones the next ask by one interval; it is never sent, so staff never see it as a
+  status, and an unanswered reminder raises nothing. Hidden or locked phones pause the page;
+  system notifications would need HTTPS, so there are none. The poll also notices a cancelled or
+  expired code.
 - Retries resend the same `event_id`, so a flaky connection records a report at most once.
   `crypto.randomUUID` is unavailable on plain-HTTP LAN pages, so `lib/checkin.ts` builds v4 UUIDs
   from `getRandomValues`.

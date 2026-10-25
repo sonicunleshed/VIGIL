@@ -40,6 +40,9 @@ class Settings:
     future_tolerance_seconds: int = 300
     # A patient check-in code stops working this long after it was issued (simulation clock).
     checkin_ttl_minutes: int = 240
+    # The check-in page reminds the patient this long after the code was issued or their last
+    # check-in report (simulation clock). A demo setting, not a clinical reassessment interval.
+    checkin_reminder_minutes: int = 30
 
 
 def get_settings() -> Settings:

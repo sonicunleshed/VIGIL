@@ -3,9 +3,12 @@
 /**
  * The patient's own check-in page, opened by scanning the QR code staff created. It shows nothing
  * about other patients and never reassures: it only says what was sent and that staff can see it.
+ *
+ * While it is open it polls the server, which says when to next ask "has anything changed?"
+ * (simulation clock). "Nothing new" only dismisses that question on this phone.
  */
 import type { CheckinSessionOut } from "@vigil/contracts";
-import { CircleAlert, CircleCheck, HandHelping, LoaderCircle } from "lucide-react";
+import { BellRing, CircleAlert, CircleCheck, HandHelping, LoaderCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -14,10 +17,13 @@ import {
   NOTE_MAX,
   newEventId,
   orderTags,
+  POLL_MS,
+  reminderDue,
   tagLabel,
   tokenFromHash,
   type CheckinReport,
 } from "@/lib/checkin";
+import { Chime, vibrate } from "@/lib/chime";
 
 type Phase =
   | { kind: "loading" }
@@ -34,10 +40,15 @@ export function CheckinView() {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
+  const [dismissedAt, setDismissedAt] = useState<string | null>(null);
+  const [sound, setSound] = useState(false);
+  const soundOn = useRef(false);
+  const chime = useRef<Chime | null>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async (t: string | null) => {
     setToken(t);
+    setDismissedAt(null);
     if (!t) {
       setPhase({ kind: "invalid" });
       return;
@@ -68,12 +79,62 @@ export function CheckinView() {
     if (phase.kind === "sent" || phase.kind === "failed") statusRef.current?.focus();
   }, [phase.kind]);
 
+  // Learns the simulation clock and the next reminder; also notices a cancelled or expired code.
+  const refresh = useCallback(async () => {
+    if (!token) return;
+    try {
+      setSession(await checkinApi.session(token));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) setPhase({ kind: "invalid" });
+      // Anything else: keep the page as it is and try again on the next poll.
+    }
+  }, [token]);
+
+  const live = phase.kind === "ready" || phase.kind === "sending" || phase.kind === "sent" || phase.kind === "failed";
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => void refresh(), POLL_MS);
+    // Phones pause hidden pages, so check as soon as the patient comes back.
+    const onVisible = () => {
+      if (document.visibilityState !== "hidden") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [live, refresh]);
+
+  const due = session !== null && (phase.kind === "ready" || phase.kind === "sent") && reminderDue(session, dismissedAt);
+
+  // Signal once each time a reminder comes due.
+  useEffect(() => {
+    if (!due) return;
+    vibrate();
+    if (soundOn.current) chime.current?.play();
+  }, [due]);
+
+  useEffect(() => {
+    const base = document.title.replace(/^\(1\) /, "");
+    document.title = due ? `(1) ${base}` : base;
+  }, [due]);
+
+  const toggleSound = (on: boolean) => {
+    chime.current ??= new Chime();
+    // Unlocking inside this tap is what lets the chime play later; play once so they hear it.
+    const ok = on && chime.current.unlock();
+    if (ok) chime.current.play();
+    soundOn.current = ok;
+    setSound(ok);
+  };
+
   // A retry resends the same report (same event id), so the server records it at most once.
   const send = async (report: CheckinReport) => {
     if (!token) return;
     setPhase({ kind: "sending", report });
     try {
       await checkinApi.send(token, report);
+      await refresh(); // the next reminder now counts from this report
       setPhase({ kind: "sent", report });
       setSelected(new Set());
       setNote("");
@@ -109,6 +170,20 @@ export function CheckinView() {
           </p>
         ) : null}
       </header>
+
+      {due ? (
+        <section role="alert" aria-labelledby="reminder-title" className="rounded-2xl border-2 border-st-info/50 bg-surface p-4">
+          <p id="reminder-title" className="flex items-center gap-2 text-lg font-semibold text-st-info">
+            <BellRing aria-hidden className="size-6 shrink-0" /> Time for a quick check-in
+          </p>
+          <p className="mt-2 text-base text-fg-2">
+            Has anything changed? If so, send an update below. If not, tap Nothing new.
+          </p>
+          <div className="mt-3">
+            <BigButton onClick={() => session && setDismissedAt(session.now)}>Nothing new</BigButton>
+          </div>
+        </section>
+      ) : null}
 
       {phase.kind === "loading" ? (
         <p className="flex items-center gap-2 text-base text-fg-2" role="status">
@@ -230,6 +305,25 @@ export function CheckinView() {
             )}
           </BigButton>
         </form>
+      ) : null}
+
+      {session && live ? (
+        <label className="flex items-center justify-between gap-4 rounded-2xl border-2 border-line bg-surface p-4">
+          <span>
+            <span className="block text-base font-medium text-fg">Remind me with a sound</span>
+            <span className="block text-sm text-fg-2">
+              While this page is open, it asks every {session.remind_every_minutes} minutes whether anything has
+              changed.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={sound}
+            onChange={(e) => toggleSound(e.target.checked)}
+            className="size-6 shrink-0 accent-[var(--accent)]"
+          />
+        </label>
       ) : null}
 
       <p className="mt-auto border-t border-line pt-4 text-base text-fg-2">

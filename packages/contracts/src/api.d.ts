@@ -133,7 +133,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Session */
+        /**
+         * Session
+         * @description The phone polls this: it also learns the simulation clock and when to remind the patient.
+         */
         get: operations["session_api_checkin_session_get"];
         put?: never;
         post?: never;
@@ -763,8 +766,22 @@ export interface components {
              * Format: date-time
              */
             expires_at: string;
+            /**
+             * Now
+             * Format: date-time
+             * @description Simulation clock; the phone times reminders against it.
+             */
+            now: string;
             /** Patient Id */
             patient_id: string;
+            /**
+             * Remind At
+             * Format: date-time
+             * @description When the page next asks whether anything changed: the code's creation or the patient's latest check-in report under it, plus `remind_every_minutes`.
+             */
+            remind_at: string;
+            /** Remind Every Minutes */
+            remind_every_minutes: number;
             /**
              * Structured Tags
              * @description Tags a report may carry, sorted.

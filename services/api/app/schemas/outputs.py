@@ -246,6 +246,12 @@ class CheckinSessionOut(_Out):
     display_code: str
     expires_at: datetime
     structured_tags: list[str] = Field(description="Tags a report may carry, sorted.")
+    now: datetime = Field(description="Simulation clock; the phone times reminders against it.")
+    remind_every_minutes: int
+    remind_at: datetime = Field(
+        description="When the page next asks whether anything changed: the code's creation or "
+        "the patient's latest check-in report under it, plus `remind_every_minutes`."
+    )
 
 
 class TimelineOut(_Out):

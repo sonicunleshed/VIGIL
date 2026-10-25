@@ -67,6 +67,27 @@ def test_session_identifies_patient_without_listing_others(client: TestClient) -
     )
 
 
+def test_session_times_reminders_on_the_simulation_clock(client: TestClient) -> None:
+    code = _issue(client)
+    headers = {"X-Checkin-Token": code["token"]}
+    s = client.get("/api/checkin/session", headers=headers).json()
+    assert (s["now"], s["remind_every_minutes"]) == ("2026-01-15T14:00:00Z", 30)
+    assert s["remind_at"] == "2026-01-15T14:30:00Z"
+
+    client.post("/api/simulation/step", json={"minutes": 20})
+    assert _send(client, code["token"], _report()).status_code == 201
+    s = client.get("/api/checkin/session", headers=headers).json()
+    assert s["now"] == "2026-01-15T14:20:00Z"
+    assert s["remind_at"] == "2026-01-15T14:50:00Z"
+
+    # Only the patient's own check-in reports move the reminder.
+    assert _send(client, None, _report(source="api-test")).status_code == 201
+    other = _issue(client, "P008")
+    assert _send(client, other["token"], _report(patient_id="P008")).status_code == 201
+    s = client.get("/api/checkin/session", headers=headers).json()
+    assert s["remind_at"] == "2026-01-15T14:50:00Z"
+
+
 def test_report_with_code_reaches_review_at_simulation_time(client: TestClient) -> None:
     code = _issue(client)
     r = _send(client, code["token"], _report(urgent_help_requested=True))

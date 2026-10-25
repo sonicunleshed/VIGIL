@@ -24,6 +24,7 @@ import {
   type CheckinReport,
 } from "@/lib/checkin";
 import { Chime, vibrate } from "@/lib/chime";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 type Phase =
   | { kind: "loading" }
@@ -162,6 +163,7 @@ export function CheckinView() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 px-4 py-6 text-fg">
       <header className="space-y-1">
+        <BrandLogo width={120} className="mb-3" />
         <p className="text-sm font-medium text-fg-3">Waiting room check-in</p>
         <h1 className="text-2xl font-semibold">Tell the nurses if anything changes</h1>
         {session ? (

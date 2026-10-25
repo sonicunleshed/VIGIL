@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Suspense } from "react";
+import { BrandLockup, BrandMark } from "@/components/layout/BrandLogo";
 import { isActive, NAV } from "@/lib/routes";
 import { useVigil } from "@/lib/store";
 
@@ -33,17 +34,14 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col">
-      <div className={`flex h-16 items-center gap-2.5 px-5 ${collapsed ? "justify-center px-0" : ""}`}>
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
-          <Activity aria-hidden className="size-4.5" />
-        </span>
-        {!collapsed && (
-          <span className="leading-tight">
-            <span className="block text-sm font-semibold tracking-wide text-fg">VIGIL</span>
-            <span className="block text-xs text-fg-3">Reassessment support</span>
-          </span>
-        )}
-      </div>
+      <Link
+        href="/"
+        onClick={onNavigate}
+        aria-label="VIGIL home"
+        className={`flex rounded-lg pt-5 pb-3 ${collapsed ? "justify-center px-0" : "px-5"}`}
+      >
+        {collapsed ? <BrandMark size={40} /> : <BrandLockup width={176} />}
+      </Link>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
         {NAV.map((section) => (

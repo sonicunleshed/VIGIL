@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "VIGIL",
-  description: "Emergency department waiting-room reassessment support.",
+  description: "Staying vigilant when every moment matters: emergency department waiting-room reassessment support.",
 };
 
 const THEME_BOOT =

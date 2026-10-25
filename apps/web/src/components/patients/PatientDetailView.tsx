@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, History, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
+import { CheckinCard } from "@/components/patients/CheckinCard";
 import { EvidencePanel } from "@/components/patients/EvidencePanel";
 import { PatientTimeline } from "@/components/patients/PatientTimeline";
 import { VitalsCard } from "@/components/patients/VitalsCard";
@@ -206,7 +207,10 @@ export function PatientDetailView() {
           </Card>
           <PatientTimeline timeline={timeline} />
         </div>
-        <EvidencePanel alerts={patientAlerts} patientId={detail.id} />
+        <div className="space-y-6">
+          <EvidencePanel alerts={patientAlerts} patientId={detail.id} />
+          <CheckinCard patientId={detail.id} displayCode={detail.display_code} />
+        </div>
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | E | Light theme, new navigation, patient story cards, guided demo, reassessment workflow, explanation seam | ✅ done |
 | F | Polish: WCAG AA colour contrast, 12 px minimum text, recovering error states, gzip, lightweight sparklines, local AI explanation drafts, screenshots | ✅ done |
 | E.2 | Clarity pass: self-explaining Home, separate observation/workflow status, next-step actions, 7-step demo with nurse review, results summary, late-delivery marking | ✅ done |
+| G | Patient check-in: a QR code per patient, a phone page with the symptom tags as big buttons, reports through the existing symptom-report endpoint | ✅ done |
 
 ## Quick start
 
@@ -44,6 +45,8 @@ Open http://localhost:3000. Screens:
 - **Watch VIGIL in Action**: a guided, reproducible 7-step walkthrough (see [docs/DEMO.md](docs/DEMO.md)).
 - **Simulation Lab**: drive the synthetic scenario.
 - **Insights & Replay**: results on synthetic scenarios and the counterfactual replay.
+- **Patient check-in** (`/checkin`): the patient's own phone page, opened from a QR code on the
+  patient's timeline. It shows nothing about other patients.
 
 On first start the API migrates its SQLite DB
 (`services/api/var/vigil.db`) and loads scenario `waiting-room-30` with seed 42: 30 synthetic
@@ -62,6 +65,13 @@ install its assets automatically (MediaPipe WASM from npm, plus the 5.8 MB pose 
 once and checksum-verified into `apps/web/public/models/`). Run `pnpm --filter web vision:setup`
 to install them explicitly. After that the camera feature works offline. Use a real browser
 window for the camera (localhost is a secure context).
+
+**Patient check-in.** On a patient's timeline, **Create check-in code** shows a QR code. A phone
+on the same Wi-Fi scans it and opens `/checkin` on this machine's network address (detected
+automatically; set `VIGIL_CHECKIN_ORIGIN` to override, e.g. for a hostname or tunnel). The phone
+reaches the API through the web server, which forwards only the two check-in calls and only when
+they carry a code. Codes expire 4 h after creation on the simulation clock, and a new code
+replaces the patient's old one. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#patient-check-in).
 
 ## Checks
 
@@ -104,7 +114,7 @@ docs/                  Architecture, safety, evaluation, demo
 | GET | `/api/patients/{id}` | Detail + symptom reports |
 | GET | `/api/patients/{id}/timeline` | Observations, reports, alerts, actions sorted by time then id |
 | POST | `/api/observations` | 201 created · 200 duplicate · 409 id reused with different payload · 422 invalid |
-| POST | `/api/symptom-reports` | Same idempotency rules; `reported_at` defaults to sim clock |
+| POST | `/api/symptom-reports` | Same idempotency rules; `reported_at` defaults to sim clock. With `X-Checkin-Token`: 401 inactive code · 403 another patient's code · 429 over 4 reports / 5 min |
 | GET | `/api/alerts?status=&type=&patient_id=` | |
 | POST | `/api/alerts/{id}/acknowledge` · `/resolve` | Body `{actor_id, note?}`; demo actors only |
 | GET | `/api/audit` | Append-only audit trail |
@@ -114,13 +124,15 @@ docs/                  Architecture, safety, evaluation, demo
 | GET | `/api/events/stream` | SSE: `hello`, `observation`, `symptom_report`, `alert_updated`, `simulation`, `reset`, `resync` |
 | GET | `/api/scenarios`, `/api/simulation` | |
 | POST | `/api/simulation/reset` · `start` · `pause` · `step` | Deterministic clock control |
-
 | GET | `/api/replay/catalog?seed=` | Patients and scenario labels for a seed |
 | POST | `/api/replay/compare` | One patient's trajectory through all three detectors |
 | GET | `/api/evaluation?seeds=1,2,3` | Metrics with denominators; recorded in `detector_runs` |
 | POST | `/api/vision/sessions` | Staff bind a camera to a patient; returns a one-time token |
 | POST | `/api/vision/events` | Structured camera event (`X-Vision-Token`); no images accepted |
 | POST | `/api/vision/sessions/{id}/stop` · GET `…/events` · GET `/api/vision/sessions` | |
+| POST | `/api/checkin/tokens` | Staff create a patient's check-in code; returns the token once; replaces any active code |
+| GET | `/api/checkin/tokens?patient_id=&active=` · POST `…/{id}/revoke` | Codes without their token; revoking is audited |
+| GET | `/api/checkin/session` | For the phone (`X-Checkin-Token`): patient code, expiry, allowed tags |
 
 Interactive docs: http://localhost:8000/docs. See [docs/EVALUATION.md](docs/EVALUATION.md) for definitions and a held-out snapshot.
 

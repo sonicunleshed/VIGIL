@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import { AppShell } from "@/components/layout/AppShell";
-import { VigilProvider } from "@/lib/store";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,11 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Apply a saved dark-mode choice before first paint (light is the default). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
-      <body>
-        <VigilProvider>
-          <AppShell>{children}</AppShell>
-        </VigilProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

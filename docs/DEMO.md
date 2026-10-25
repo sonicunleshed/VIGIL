@@ -25,6 +25,9 @@ Notes for presenters:
   not a same-patient speed race; the page says so next to the numbers.
 - The camera needs a secure context: use the laptop browser (localhost). A phone on the LAN
   needs HTTPS.
+- Patient check-in works over plain HTTP: open a patient's timeline, **Create check-in code**,
+  and let an audience member scan it on the same Wi-Fi. A tap on "Harder to breathe" opens a
+  prompt-review request on the console. Reset ends every code.
 
 ## Before you present
 

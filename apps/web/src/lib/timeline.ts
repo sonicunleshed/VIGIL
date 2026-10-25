@@ -1,4 +1,5 @@
 import type { TimelineOut } from "@vigil/contracts";
+import { CHECKIN_SOURCE } from "@/lib/checkin";
 import { ALERT_TYPE_LABEL, OUTCOME_LABEL } from "@/lib/monitoring";
 import { formatClock } from "@/lib/format";
 import { EVENT_LABEL, type VisionEventType } from "@/lib/vision/classifier";
@@ -59,7 +60,7 @@ export function buildTimelineEntries(timeline: TimelineOut): TimelineEntry[] {
         detail: [r.free_text ? `“${r.free_text}”` : null, r.structured_tags.length ? r.structured_tags.join(", ").replaceAll("_", " ") : null]
           .filter(Boolean)
           .join(" · "),
-        flags: [],
+        flags: r.source === CHECKIN_SOURCE ? ["sent from patient's phone"] : [],
       });
     } else if (item.item_type === "alert") {
       const a = item.alert;

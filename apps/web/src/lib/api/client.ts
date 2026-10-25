@@ -2,6 +2,8 @@ import type {
   ActivityFeedOut,
   AlertOut,
   AlertsOut,
+  CheckinTokenCreatedOut,
+  CheckinTokenOut,
   ExplanationOut,
   ObservationKind,
   PatientSeriesOut,
@@ -110,6 +112,12 @@ export const api = {
       body: JSON.stringify(body),
     }),
   evaluation: (seeds: number[]) => request<EvaluationOut>(`/api/evaluation?seeds=${seeds.join(",")}`),
+  activeCheckinCodes: (patientId: string) =>
+    request<CheckinTokenOut[]>(`/api/checkin/tokens?patient_id=${encodeURIComponent(patientId)}&active=true`),
+  createCheckinCode: (patientId: string) =>
+    post<CheckinTokenCreatedOut>("/api/checkin/tokens", { patient_id: patientId, actor_id: DEMO_ACTOR }),
+  revokeCheckinCode: (codeId: string) =>
+    post<CheckinTokenOut>(`/api/checkin/tokens/${codeId}/revoke`, { actor_id: DEMO_ACTOR }),
 };
 
 export function streamUrl(): string {

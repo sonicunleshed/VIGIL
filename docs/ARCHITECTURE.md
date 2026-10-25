@@ -179,3 +179,38 @@ readings *delivered* by the scrubber time, so the chart shows what each detector
   `possible_fall_like_motion` opens a `CAMERA_OBSERVATION` review request (prompt review,
   10 min cooldown). Everything else is timeline-only. Camera events never feed vital-sign
   detection, staleness or ESI.
+
+## Patient check-in
+
+A patient (or whoever is with them) can tell staff that something changed, from their own phone.
+
+**Server** (`services/api/app/services/checkin.py`, `app/api/checkin.py`)
+- `checkin_tokens`: staff create a code for one patient (manual association, like camera
+  sessions). The random token is returned once and only its SHA-256 is stored. A new code for the
+  same patient replaces the active one. Codes expire `checkin_ttl_minutes` (240) after creation on
+  the simulation clock; reset ends them all. Creating and revoking are audited.
+- Reports use the existing `POST /api/symptom-reports` with an `X-Checkin-Token` header, so
+  ingestion, idempotency and detection are unchanged (the hybrid's `PATIENT_REPORT` rules apply;
+  "Get staff help now" sets `urgent_help_requested`). With a code: the report's patient must be
+  the code's patient, `source` must be `patient_checkin`, `reported_at` and `scenario_id` must be
+  absent (the server stamps the simulation clock), and each code may send 4 reports per 5 wall
+  minutes. Without a code, no report may claim the `patient_checkin` source.
+
+**Browser** (`apps/web`)
+- Staff pages live in the `app/(staff)` route group, which holds the live store and app shell.
+  `/checkin` sits outside it, so the phone never loads the patient list or the event stream.
+- The staff **Patient check-in** card (patient timeline) creates a code and draws its QR code
+  locally (`components/ui/QrCode.tsx`). The link is `http://<this machine's LAN address>:3000/checkin#<token>`;
+  `GET /checkin/origins` lists the addresses (`VIGIL_CHECKIN_ORIGIN` overrides). The token is in
+  the URL fragment, which browsers never send to a server.
+- A phone cannot reach the API on the laptop's localhost, so `next.config.ts` rewrites exactly
+  `/api/checkin/session` and `/api/symptom-reports` to the API, and only when the request carries
+  a well-formed `X-Checkin-Token`. The header rule has a value pattern on purpose: without one,
+  Next copies the header into the forwarded query string and the code would reach access logs.
+  `allowedDevOrigins` lists the machine's LAN addresses so the dev server serves a phone.
+- Retries resend the same `event_id`, so a flaky connection records a report at most once.
+  `crypto.randomUUID` is unavailable on plain-HTTP LAN pages, so `lib/checkin.ts` builds v4 UUIDs
+  from `getRandomValues`.
+- The page says what was sent and that staff can see it. It never reassures, promises a wait
+  time or mentions priority, and always tells the patient to speak to staff if they feel much
+  worse.

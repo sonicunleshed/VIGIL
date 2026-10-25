@@ -6,11 +6,12 @@ import { PatientTable } from "@/components/dashboard/PatientTable";
 import { StatusDistribution } from "@/components/dashboard/StatusDistribution";
 import { PatientStoryCard } from "@/components/patients/PatientStoryCard";
 import { STATUS_META } from "@/components/ui/StatusBadge";
-import { EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
+import { EmptyState, Skeleton } from "@/components/ui/primitives";
 import { alertsByPatient, STATUS_ORDER, type MonitoringStatus } from "@/lib/monitoring";
 import { buildRows, DEFAULT_FILTERS, filterAndSort, type QueueFilters, type SortKey } from "@/lib/queue";
 import { useVigil } from "@/lib/store";
 import { useSeries } from "@/lib/useSeries";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 const SORT_LABEL: Record<SortKey, string> = {
   requests_first: "Open requests first",
@@ -37,7 +38,7 @@ export function LiveMonitoringView() {
   }, [rows]);
   const set = <K extends keyof QueueFilters>(k: K, v: QueueFilters[K]) => setF((s) => ({ ...s, [k]: v }));
 
-  if (error && patients.length === 0) return <ErrorState title="Cannot load patients" detail={error} />;
+  if (error && patients.length === 0) return <ApiErrorState title="Cannot load patients" error={error} />;
   if (loading) return <Skeleton className="h-96" />;
 
   return (
@@ -80,7 +81,7 @@ export function LiveMonitoringView() {
                 className="h-9 w-40 rounded-lg border border-line bg-surface pr-2 pl-8 text-sm text-fg placeholder:text-fg-3 focus:border-accent focus:outline-none"
               />
             </div>
-            <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+            <label className="flex flex-col gap-1 text-xs text-fg-3">
               Status
               <select className={selectCls} value={f.status} onChange={(e) => set("status", e.target.value as QueueFilters["status"])}>
                 <option value="all">All statuses</option>
@@ -91,7 +92,7 @@ export function LiveMonitoringView() {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+            <label className="flex flex-col gap-1 text-xs text-fg-3">
               ESI
               <select
                 className={selectCls}
@@ -106,7 +107,7 @@ export function LiveMonitoringView() {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+            <label className="flex flex-col gap-1 text-xs text-fg-3">
               Sort
               <select className={selectCls} value={f.sort} onChange={(e) => set("sort", e.target.value as SortKey)}>
                 {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (

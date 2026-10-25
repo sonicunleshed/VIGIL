@@ -7,12 +7,13 @@ import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { AlertTrend } from "@/components/dashboard/AlertTrend";
 import { SimulationControls } from "@/components/dashboard/SimulationControls";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Button, Card, CardHeader, ErrorState, Skeleton } from "@/components/ui/primitives";
+import { Button, Card, CardHeader, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
 import { formatAge } from "@/lib/format";
 import { STATUS_ORDER } from "@/lib/monitoring";
 import { buildRows } from "@/lib/queue";
 import { useVigil, type StreamEvent } from "@/lib/store";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 /** Plain-language labels for live stream events. */
 const SPOTLIGHT: Record<string, string> = {
@@ -64,7 +65,7 @@ function SeedReset({ current }: { current: number }) {
         }
       }}
     >
-      <label htmlFor={id} className="flex flex-col gap-1 text-[11px] text-fg-3">
+      <label htmlFor={id} className="flex flex-col gap-1 text-xs text-fg-3">
         Seed
         <input
           id={id}
@@ -77,7 +78,7 @@ function SeedReset({ current }: { current: number }) {
       <Button type="submit" icon={RotateCcw} disabled={!valid || busy}>
         Reset to seed
       </Button>
-      <p className="w-full text-[11px] text-fg-3">The same seed always reproduces the same patients, readings and alerts.</p>
+      <p className="w-full text-xs text-fg-3">The same seed always reproduces the same patients, readings and alerts.</p>
     </form>
   );
 }
@@ -85,7 +86,7 @@ function SeedReset({ current }: { current: number }) {
 export function SimulationLabView() {
   const { patients, alerts, simulation, events, loading, error } = useVigil();
   const patientsById = new Map(patients.map((p) => [p.id, p]));
-  if (error && patients.length === 0) return <ErrorState title="Cannot reach the simulation" detail={error} />;
+  if (error && patients.length === 0) return <ApiErrorState title="Cannot reach the simulation" error={error} />;
   if (loading || !simulation) return <Skeleton className="h-96" />;
   const rows = buildRows(patients, alerts);
 
@@ -151,7 +152,7 @@ export function SimulationLabView() {
                       <span className="font-mono text-sm font-semibold text-fg">{r.patient.display_code}</span>
                       <span className="tabular text-sm text-fg">{hr ? `${hr.value} bpm` : "HR ?"}</span>
                     </p>
-                    <p className="mt-0.5 text-[11px] text-fg-3">
+                    <p className="mt-0.5 text-xs text-fg-3">
                       {r.last ? `Last observed ${formatAge(r.last.ageSeconds)}` : "Never observed"}
                     </p>
                     <div className="mt-2">

@@ -91,7 +91,7 @@ function ForwardingControls({
   return (
     <section aria-label="Patient link" className="rounded-xl border border-line bg-surface p-4">
       <div className="flex flex-wrap items-end gap-3">
-        <label htmlFor={selectId} className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label htmlFor={selectId} className="flex flex-col gap-1 text-xs text-fg-3">
           Patient on camera (chosen by staff)
           <select
             id={selectId}
@@ -124,7 +124,7 @@ function ForwardingControls({
         {status}
       </p>
       {!canForward && !forwarding && (
-        <p className="mt-1 text-[11px] text-fg-3">Start the camera and choose a patient to enable sending.</p>
+        <p className="mt-1 text-xs text-fg-3">Start the camera and choose a patient to enable sending.</p>
       )}
     </section>
   );
@@ -254,7 +254,7 @@ export function VisionView() {
               {tracking.warn ? `Sending paused · ${patient.display_code}` : `Sending to ${patient.display_code}`}
             </p>
           )}
-          <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white/80">
+          <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-xs text-white/80">
             <Lock aria-hidden className="size-3" /> Local processing
           </span>
         </div>
@@ -348,7 +348,7 @@ export function VisionView() {
               {model.message}
             </p>
           )}
-          <p className="flex items-center gap-1.5 border-t border-line px-5 py-3 text-[11px] text-fg-3">
+          <p className="flex items-center gap-1.5 border-t border-line px-5 py-3 text-xs text-fg-3">
             <Cpu aria-hidden className="size-3" /> {MODEL_VERSION}, running on this device. Video
             never leaves it; only structured movement events are sent, and only while linked to a patient.
           </p>

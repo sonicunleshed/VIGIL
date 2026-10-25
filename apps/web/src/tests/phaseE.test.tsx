@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ExplanationView } from "@/components/explain/ExplanationPanel";
 import { changes, evidenceKind, focusKind } from "@/lib/story";
+import { layout } from "@/components/patients/Sparkline";
 
 afterEach(cleanup);
 
@@ -78,5 +79,21 @@ describe("ExplanationView", () => {
     expect(screen.getByText(/AI-written draft \(local-llm q4\)/)).toBeTruthy();
     rerender(<ExplanationView e={explanation({ fallback_reason: "provider unavailable: TimeoutError" })} />);
     expect(screen.getByText(/provider unavailable: TimeoutError/)).toBeTruthy();
+  });
+});
+
+describe("Sparkline layout", () => {
+  it("keeps a minimum vertical range so small wobbles stay small", () => {
+    const { dots } = layout([pt("a", "2026-01-15T13:00:00Z", 80), pt("b", "2026-01-15T13:20:00Z", 82)], "heart_rate");
+    // 2 bpm inside a 20 bpm minimum range moves the dot about a tenth of the chart height.
+    expect(Math.abs(dots[0].y - dots[1].y)).toBeLessThan(5);
+  });
+
+  it("breaks the line across long gaps instead of interpolating", () => {
+    const { segments } = layout(
+      [pt("a", "2026-01-15T13:00:00Z", 80), pt("b", "2026-01-15T13:20:00Z", 82), pt("c", "2026-01-15T15:00:00Z", 90)],
+      "heart_rate",
+    );
+    expect(segments.map(([x, y]) => `${x.id}-${y.id}`)).toEqual(["a-b"]);
   });
 });

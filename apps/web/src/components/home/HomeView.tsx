@@ -5,11 +5,12 @@ import { ArrowRight, BellRing, Clock, PlayCircle, ShieldCheck, Users } from "luc
 import { useMemo } from "react";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { PatientStoryCard } from "@/components/patients/PatientStoryCard";
-import { Button, Card, CardHeader, ErrorState, Skeleton } from "@/components/ui/primitives";
+import { Card, CardHeader, Skeleton } from "@/components/ui/primitives";
 import { formatAge, formatClock, formatDuration } from "@/lib/format";
 import { alertsByPatient, compareAlerts, computeKpis, isUnresolved, lastObservation } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
 import { useSeries } from "@/lib/useSeries";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 const NEEDS_REVIEW_MAX = 4;
 const LEAST_RECENT_MAX = 5;
@@ -32,7 +33,7 @@ function Stat({ value, label, href }: { value: string | number; label: string; h
 }
 
 export function HomeView() {
-  const { patients, alerts, simulation, loading, error, refresh } = useVigil();
+  const { patients, alerts, simulation, loading, error } = useVigil();
   const series = useSeries();
   const byPatient = useMemo(() => alertsByPatient(alerts), [alerts]);
   const kpis = useMemo(() => computeKpis(patients, alerts), [patients, alerts]);
@@ -56,17 +57,7 @@ export function HomeView() {
   );
 
   if (error && patients.length === 0) {
-    return (
-      <ErrorState
-        title="Cannot load the waiting room"
-        detail={`${error}. Start the API with \`pnpm dev\` from the repository root.`}
-        action={
-          <Button size="sm" onClick={() => void refresh()}>
-            Retry
-          </Button>
-        }
-      />
-    );
+    return <ApiErrorState title="Cannot load the waiting room" error={error} />;
   }
   if (loading || !simulation) {
     return (

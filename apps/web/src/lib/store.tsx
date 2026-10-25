@@ -41,6 +41,8 @@ export type VigilState = {
   /** Patient ids that received a new alert in the latest snapshot (for a subtle row highlight). */
   newAlertPatients: Set<string>;
   events: StreamEvent[];
+  /** Increments on every stream (re)connect. Fetch-once views retry on it after an error. */
+  reconnects: number;
 };
 
 type VigilContext = VigilState & {
@@ -76,6 +78,7 @@ export function VigilProvider({ children }: { children: ReactNode }) {
     version: 0,
     newAlertPatients: new Set(),
     events: [],
+    reconnects: 0,
   });
   const knownAlertIds = useRef<Set<string> | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
@@ -139,7 +142,7 @@ export function VigilProvider({ children }: { children: ReactNode }) {
     };
     // `hello` arrives on every (re)connect: take a full snapshot then.
     source.addEventListener("hello", () => {
-      setState((s) => ({ ...s, connection: "live" }));
+      setState((s) => ({ ...s, connection: "live", reconnects: s.reconnects + 1 }));
       void refresh();
     });
     for (const type of STREAM_TYPES) {

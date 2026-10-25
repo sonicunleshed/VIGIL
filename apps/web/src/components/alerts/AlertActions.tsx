@@ -59,7 +59,7 @@ export function AlertActions({ alert, size = "md" }: { alert: AlertOut; size?: "
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] text-fg-3">
+      <p className="text-xs text-fg-3">
         Next step: <span className="font-medium text-fg-2">{NEXT_TEXT[alert.status]}</span>
       </p>
       <div className="flex flex-wrap gap-2">
@@ -119,7 +119,7 @@ export function AlertActions({ alert, size = "md" }: { alert: AlertOut; size?: "
               </label>
             ))}
           </div>
-          <label className="block text-[11px] text-fg-3">
+          <label className="block text-xs text-fg-3">
             Note (optional, saved to the audit trail)
             <input
               value={note}

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertActions } from "@/components/alerts/AlertActions";
 import { ExplanationPanel } from "@/components/explain/ExplanationPanel";
 import { WorkflowBadge } from "@/components/ui/StatusBadge";
-import { EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
+import { EmptyState, Skeleton } from "@/components/ui/primitives";
 import { formatAge, formatClock, formatDuration, secondsBetween } from "@/lib/format";
 import {
   ALERT_SORT_POLICY,
@@ -19,6 +19,7 @@ import {
   URGENCY_LABEL,
 } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 const TABS = [
   { key: "open", label: "Needs review" },
@@ -160,7 +161,7 @@ export function AttentionView() {
     [alerts, activeTab, type],
   );
 
-  if (error && alerts.length === 0 && patients.length === 0) return <ErrorState title="Cannot load review requests" detail={error} />;
+  if (error && alerts.length === 0 && patients.length === 0) return <ApiErrorState title="Cannot load review requests" error={error} />;
   if (loading || !asOf) return <Skeleton className="h-96" />;
 
   return (

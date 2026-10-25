@@ -10,13 +10,14 @@ import { PatientTimeline } from "@/components/patients/PatientTimeline";
 import { VitalsCard } from "@/components/patients/VitalsCard";
 import { VitalTrendChart, type ChartMarker } from "@/components/patients/VitalTrendChart";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Card, CardHeader, EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
+import { Card, CardHeader, EmptyState, Skeleton } from "@/components/ui/primitives";
 import { observationIndex } from "@/lib/evidence";
 import { formatAge, formatClock, formatDuration } from "@/lib/format";
 import { lastObservation, monitoringStatus } from "@/lib/monitoring";
 import { useVigil } from "@/lib/store";
 import { usePatient } from "@/lib/usePatient";
 import { VITALS, VITAL_BY_KIND } from "@/lib/vitals";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 const RANGES = [
   { key: "all", label: "Since arrival", minutes: null },
@@ -63,7 +64,7 @@ export function PatientDetailView() {
     );
   }
   if (error && !detail) {
-    return <ErrorState title="Cannot load this patient" detail={error.message} />;
+    return <ApiErrorState title="Cannot load this patient" error={error.message} />;
   }
   if (loading || !detail || !timeline) {
     return (

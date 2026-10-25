@@ -81,14 +81,14 @@ export function VisionEventLog({
                   </p>
                   {forwarded[e.id] ? (
                     <p
-                      className={`text-[11px] ${FORWARD_TEXT[forwarded[e.id].status].cls}`}
+                      className={`text-xs ${FORWARD_TEXT[forwarded[e.id].status].cls}`}
                       title={forwarded[e.id].message}
                     >
                       {FORWARD_TEXT[forwarded[e.id].status].text}
                       {forwarded[e.id].message ? ` · ${forwarded[e.id].message}` : ""}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-fg-3">local only</p>
+                    <p className="text-xs text-fg-3">local only</p>
                   )}
                 </div>
               </li>

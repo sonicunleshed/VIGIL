@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __doc__ as app_doc
@@ -66,6 +67,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         description=(app_doc or "") + "\n\nAlerts are advisory; clinicians make every decision.",
         lifespan=lifespan,
     )
+    # Live views refetch read models (the series is ~160 kB) on every update; compress them.
+    # Starlette never compresses text/event-stream, so SSE stays unbuffered.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),

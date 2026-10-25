@@ -40,7 +40,7 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
         {!collapsed && (
           <span className="leading-tight">
             <span className="block text-sm font-semibold tracking-wide text-fg">VIGIL</span>
-            <span className="block text-[11px] text-fg-3">Reassessment support</span>
+            <span className="block text-xs text-fg-3">Reassessment support</span>
           </span>
         )}
       </div>
@@ -49,7 +49,7 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
         {NAV.map((section) => (
           <div key={section.title}>
             {!collapsed && (
-              <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-3">
+              <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-fg-3">
                 {section.title}
               </p>
             )}
@@ -75,7 +75,7 @@ function SidebarNavInner({ collapsed, onToggle, onNavigate, pathname }: Props & 
                       {collapsed ? <span className="sr-only">{item.label}</span> : <span className="flex-1">{item.label}</span>}
                       {count > 0 && (
                         <span
-                          className={`tabular rounded-full bg-st-due/15 px-1.5 text-[11px] font-semibold text-st-due ${
+                          className={`tabular rounded-full bg-st-due/15 px-1.5 text-xs font-semibold text-st-due ${
                             collapsed ? "absolute ml-6 -mt-5" : ""
                           }`}
                         >

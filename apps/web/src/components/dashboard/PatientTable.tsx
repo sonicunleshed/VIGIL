@@ -48,7 +48,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
             className="h-9 w-40 rounded-lg border border-line bg-raised pr-2 pl-8 text-sm text-fg placeholder:text-fg-3 focus:border-accent focus:outline-none"
           />
         </div>
-        <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
           Status
           <select
             className={selectCls}
@@ -63,7 +63,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
           ESI
           <select
             className={selectCls}
@@ -78,7 +78,7 @@ export function PatientTable({ rows, highlight }: { rows: PatientRow[]; highligh
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
           <span className="inline-flex items-center gap-1">
             <ArrowUpDown aria-hidden className="size-3" /> Sort
           </span>

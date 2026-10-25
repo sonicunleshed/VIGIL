@@ -19,7 +19,7 @@ function ProviderBadge({ e }: { e: ExplanationOut }) {
   const ruleBased = e.provider === "template";
   const Icon = ruleBased ? FileText : Bot;
   return (
-    <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-fg-3">
+    <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-3">
       <Icon aria-hidden className="size-3" />
       {ruleBased
         ? "Rule-based explanation from recorded data"
@@ -42,7 +42,7 @@ function Chip({ label, title }: { label: string; title: string }) {
         tabIndex={0}
         title={title}
         aria-label={`Source ${label}: ${title}`}
-        className="tabular cursor-help rounded bg-raised px-1 text-[10px] font-semibold text-fg-2"
+        className="tabular cursor-help rounded bg-raised px-1 text-[11px] font-semibold text-fg-2"
       >
         {label}
       </span>
@@ -61,7 +61,7 @@ export function ExplanationView({ e, compact = false }: { e: ExplanationOut; com
     <div className="space-y-3">
       {groups.map((g) => (
         <div key={g.kind}>
-          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-fg-3">{HEADINGS[g.kind]}</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-fg-3">{HEADINGS[g.kind]}</h4>
           <ul className="mt-1 space-y-1">
             {g.items.map((s, i) => (
               <li key={`${g.kind}-${i}`} className={`text-sm ${g.kind === "suggested_workflow" ? "font-medium text-fg" : "text-fg-2"}`}>

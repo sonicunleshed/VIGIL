@@ -115,6 +115,12 @@ def test_activity_groups_vital_rounds_and_includes_reviews(client: TestClient) -
     assert keys == sorted(keys, reverse=True)
 
 
+def test_large_read_models_are_compressed(client: TestClient) -> None:
+    r = client.get("/api/patients/series", headers={"Accept-Encoding": "gzip"})
+    assert r.status_code == 200 and r.headers.get("content-encoding") == "gzip"
+    assert len(r.json()["patients"]) == 30
+
+
 def test_activity_marks_late_deliveries_with_arrival_time(client: TestClient) -> None:
     newer = obs_body(observed_at="2026-01-15T13:59:30Z", value=95)
     older = obs_body(observed_at="2026-01-15T13:59:10Z", value=70)

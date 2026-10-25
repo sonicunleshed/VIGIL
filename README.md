@@ -6,6 +6,12 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 
 *"Triage captures a moment. VIGIL notices when that picture changes."*
 
+![Home: who has an open reassessment request, why, and what happened recently](docs/screenshots/home.png)
+
+| Live Monitoring | Reassessment Requests | Insights & Replay |
+|---|---|---|
+| ![Live Monitoring](docs/screenshots/monitoring.png) | ![Reassessment Requests](docs/screenshots/requests.png) | ![Insights & Replay](docs/screenshots/insights.png) |
+
 ## Status
 
 | Phase | Scope | State |
@@ -18,6 +24,7 @@ diagnoses, or reorders a queue. Every alert is advisory and a nurse makes every 
 | 5 | Counterfactual replay + evaluation (Insights & Replay screen) | ✅ done |
 | C/D | VIGIL Vision: on-device pose, camera sessions bound to a patient, timeline events | ✅ done |
 | E | Light theme, new navigation, patient story cards, guided demo, reassessment workflow, explanation seam | ✅ done |
+| F | Polish: WCAG AA colour contrast, 12 px minimum text, recovering error states, gzip, lightweight sparklines, local AI explanation drafts, screenshots | ✅ done |
 | E.2 | Clarity pass: self-explaining Home, separate observation/workflow status, next-step actions, 7-step demo with nurse review, results summary, late-delivery marking | ✅ done |
 
 ## Quick start

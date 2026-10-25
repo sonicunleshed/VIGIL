@@ -43,7 +43,7 @@ export function PatientTimeline({ timeline }: { timeline: TimelineOut }) {
                 {e.flags.length > 0 && (
                   <p className="mt-0.5 flex flex-wrap gap-1.5">
                     {e.flags.map((f) => (
-                      <span key={f} className="rounded border border-line px-1.5 text-[10px] text-fg-3">
+                      <span key={f} className="rounded border border-line px-1.5 text-[11px] text-fg-3">
                         {f}
                       </span>
                     ))}

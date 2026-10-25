@@ -25,3 +25,19 @@ Notes for presenters:
   not a same-patient speed race; the page says so next to the numbers.
 - The camera needs a secure context: use the laptop browser (localhost). A phone on the LAN
   needs HTTPS.
+
+## Before you present
+
+1. `pnpm dev` (or `pnpm dev:llm` for local AI explanation drafts; run `ollama serve` first).
+2. Open http://localhost:3000 in a real browser window; full screen; light theme.
+3. Run the walkthrough once end to end, then press **Replay from start**.
+
+## If something goes wrong
+
+| Symptom | What to do |
+|---|---|
+| "Cannot reach the VIGIL API" | Start `pnpm dev` from the repo root. Pages reconnect on their own; no reload needed. |
+| Explanation says "local model not reachable" | `ollama serve` is not running, or the model is not pulled (`ollama pull qwen3:4b-instruct`). The rule-based explanation is shown meanwhile. |
+| First AI explanation is slow | The model loads in the background at API start (a few seconds); later ones take about a second. |
+| Demo step 3 never flags | The scenario is past the change: go back to step 1 and reset. |
+| Camera "permission denied" | Allow camera access for localhost in the browser's site settings, then press Start camera. |

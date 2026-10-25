@@ -36,13 +36,13 @@ export function EvidenceInspector({
           {alert.in_label_window && <span className="ml-2 font-semibold text-st-monitoring">Inside scripted window</span>}
         </p>
         <p className="mt-1 text-fg">{alert.summary}</p>
-        <p className="tabular mt-1 text-[11px] text-fg-3">
+        <p className="tabular mt-1 text-xs text-fg-3">
           Raised {formatClock(alert.created_at, true)} UTC with {available.length} readings available
           (delivered by then)
         </p>
       </div>
       <div>
-        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-fg-3">Cited readings</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-fg-3">Cited readings</h4>
         <ul className="mt-1 space-y-0.5">
           {ev.eventIds.length === 0 && <li className="text-xs text-fg-3">None cited.</li>}
           {ev.eventIds.map((id) => {
@@ -66,7 +66,7 @@ export function EvidenceInspector({
       </div>
       {ev.rules.length > 0 && (
         <div>
-          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-fg-3">Rules</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-fg-3">Rules</h4>
           <ul className="mt-1 list-inside list-disc text-xs text-fg-2">
             {ev.rules.map((r) => (
               <li key={r}>{r}</li>
@@ -76,7 +76,7 @@ export function EvidenceInspector({
       )}
       {ev.limitations.length > 0 && (
         <div>
-          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-fg-3">Limitations</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-fg-3">Limitations</h4>
           <ul className="mt-1 list-inside list-disc text-xs text-fg-2">
             {ev.limitations.map((l) => (
               <li key={l}>{l}</li>

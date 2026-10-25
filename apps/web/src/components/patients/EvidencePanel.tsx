@@ -19,14 +19,14 @@ function AlertBlock({ alert }: { alert: AlertOut }) {
           {" · "}
           {ALERT_STATUS_LABEL[alert.status] ?? alert.status}
         </p>
-        <p className="tabular mt-0.5 text-[11px] text-fg-3">
+        <p className="tabular mt-0.5 text-xs text-fg-3">
           Raised {formatClock(alert.created_at, true)} UTC by {alert.detector} v{alert.detector_version}
         </p>
       </header>
       <ExplanationPanel subject="alert" id={alert.id} />
       <details className="text-xs">
         <summary className="cursor-pointer text-fg-3 hover:text-fg">How detected (raw evidence)</summary>
-        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-bg p-2 font-mono text-[11px] text-fg-2">
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-bg p-2 font-mono text-xs text-fg-2">
           {JSON.stringify(alert.evidence_json, null, 2)}
         </pre>
       </details>

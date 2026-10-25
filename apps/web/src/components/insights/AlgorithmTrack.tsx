@@ -27,7 +27,7 @@ export function AlgorithmTrack({
     <div className="grid grid-cols-[9rem_minmax(0,1fr)] items-center gap-3">
       <div>
         <p className="text-sm font-medium text-fg">{DETECTOR_TEXT[detector.detector] ?? detector.detector}</p>
-        <p className="text-[11px] text-fg-3">
+        <p className="text-xs text-fg-3">
           {detector.alerts.length} alert{detector.alerts.length === 1 ? "" : "s"} · v{detector.version}
         </p>
       </div>

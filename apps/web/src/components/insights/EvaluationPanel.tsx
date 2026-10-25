@@ -4,6 +4,7 @@ import type { DetectorMetricsOut, EvaluationOut } from "@vigil/contracts";
 import { useEffect, useState } from "react";
 import { ErrorState, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
+import { useVigil } from "@/lib/store";
 import { ARCHETYPE_TEXT, DETECTOR_TEXT, formatDelay, formatRatio } from "@/lib/insights";
 
 const SEED_SETS: { label: string; seeds: number[] }[] = [
@@ -90,16 +91,24 @@ export function EvaluationPanel() {
   const [data, setData] = useState<{ key: number; out: EvaluationOut } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const { reconnects } = useVigil();
+  // After a failure, try again whenever the live connection comes back.
+  const retry = error ? reconnects : 0;
+
   useEffect(() => {
     let cancelled = false;
     api.evaluation(SEED_SETS[setIndex].seeds).then(
-      (out) => !cancelled && setData({ key: setIndex, out }),
+      (out) => {
+        if (cancelled) return;
+        setData({ key: setIndex, out });
+        setError(null);
+      },
       (e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)),
     );
     return () => {
       cancelled = true;
     };
-  }, [setIndex]);
+  }, [setIndex, retry]);
 
   const out = data?.key === setIndex ? data.out : null;
 
@@ -145,7 +154,7 @@ export function EvaluationPanel() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <caption className="sr-only">Detector metrics on labelled scenarios</caption>
-                  <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+                  <thead className="text-xs uppercase tracking-wide text-fg-3">
                     <tr className="border-b border-line">
                       <th scope="col" className="py-2 pr-4 font-medium">Metric</th>
                       {out.detectors.map((d) => (
@@ -161,7 +170,7 @@ export function EvaluationPanel() {
                       <tr key={r.label} className="border-b border-line/60 align-top last:border-0">
                         <th scope="row" className="py-2.5 pr-4 font-normal text-fg-2">
                           {r.label}
-                          <span className="block text-[11px] text-fg-3">{r.hint}</span>
+                          <span className="block text-xs text-fg-3">{r.hint}</span>
                         </th>
                         {out.detectors.map((d) => (
                           <td key={d.detector} className="tabular px-3 py-2.5 text-fg">
@@ -181,7 +190,7 @@ export function EvaluationPanel() {
                 </p>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full min-w-[720px] text-left text-sm">
-                    <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+                    <thead className="text-xs uppercase tracking-wide text-fg-3">
                       <tr className="border-b border-line">
                         <th scope="col" className="py-2 pr-4 font-medium">Scenario type</th>
                         {out.detectors.map((d) => (
@@ -196,7 +205,7 @@ export function EvaluationPanel() {
                         <tr key={row.archetype} className="border-b border-line/60 last:border-0">
                           <th scope="row" className="py-2 pr-4 font-normal text-fg-2">
                             {ARCHETYPE_TEXT[row.archetype] ?? row.archetype}
-                            <span className="ml-1 text-[11px] text-fg-3">({row.patients})</span>
+                            <span className="ml-1 text-xs text-fg-3">({row.patients})</span>
                           </th>
                           {out.detectors.map((d) => {
                             const c = row.by_detector[d.detector];

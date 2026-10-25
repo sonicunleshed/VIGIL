@@ -9,6 +9,7 @@ import { EvidenceInspector } from "@/components/insights/EvidenceInspector";
 import { ReplayChart } from "@/components/insights/ReplayChart";
 import { Button, Card, CardHeader, EmptyState, ErrorState, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
+import { useVigil } from "@/lib/store";
 import { formatClock } from "@/lib/format";
 import { ARCHETYPE_TEXT, LABEL_TEXT, type Domain } from "@/lib/insights";
 import { VITALS, VITAL_BY_KIND } from "@/lib/vitals";
@@ -24,6 +25,9 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
   const [at, setAt] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [selected, setSelected] = useState<{ detector: string; alertId: string } | null>(null);
+  const { reconnects } = useVigil();
+  // After a failure, try again whenever the live connection comes back.
+  const retry = error ? reconnects : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +35,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
       (c) => {
         if (cancelled) return;
         setCatalog(c);
+        setError(null);
         setPatientId((p) => (p && c.patients.some((x) => x.id === p) ? p : (c.patients.find((x) => x.archetype === "gradual_trend")?.id ?? c.patients[0].id)));
       },
       (e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)),
@@ -38,7 +43,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
     return () => {
       cancelled = true;
     };
-  }, [seed]);
+  }, [seed, retry]);
 
   useEffect(() => {
     if (!patientId) return;
@@ -57,7 +62,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
     return () => {
       cancelled = true;
     };
-  }, [seed, patientId]);
+  }, [seed, patientId, retry]);
 
   const domain: Domain | null = useMemo(() => {
     if (!result) return null;
@@ -87,7 +92,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
           Patient trajectory
           <select
             value={patientId ?? ""}
@@ -101,7 +106,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-[11px] text-fg-3">
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
           Vital
           <select
             value={kind}
@@ -181,7 +186,7 @@ export function ReplayPanel({ seed, initialPatient }: { seed: number; initialPat
             onSelect={(alertId) => setSelected({ detector: d.detector, alertId })}
           />
         ))}
-        <p className="pl-[9.75rem] text-[11px] text-fg-3">
+        <p className="pl-[9.75rem] text-xs text-fg-3">
           ◆ observed change · ● workflow alert (report / stale / quality) · red = false change alert ·
           ringed = first change alert · shaded = scripted window · hollow = not yet raised
         </p>

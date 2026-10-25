@@ -21,7 +21,7 @@ export function ComparisonTable({ detectors, hasDeterioration }: { detectors: De
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
         <caption className="sr-only">Computed comparison of the three detectors on this patient</caption>
-        <thead className="text-[11px] uppercase tracking-wide text-fg-3">
+        <thead className="text-xs uppercase tracking-wide text-fg-3">
           <tr className="border-b border-line">
             <th scope="col" className="py-2 pr-4 font-medium">Measure</th>
             {detectors.map((d) => (
@@ -36,7 +36,7 @@ export function ComparisonTable({ detectors, hasDeterioration }: { detectors: De
             <tr key={r.label} className="border-b border-line/60 align-top last:border-0">
               <th scope="row" className="py-2.5 pr-4 font-normal text-fg-2">
                 {r.label}
-                {r.hint && <span className="block text-[11px] text-fg-3">{r.hint}</span>}
+                {r.hint && <span className="block text-xs text-fg-3">{r.hint}</span>}
               </th>
               {detectors.map((d) => (
                 <td key={d.detector} className="tabular px-3 py-2.5 text-fg">

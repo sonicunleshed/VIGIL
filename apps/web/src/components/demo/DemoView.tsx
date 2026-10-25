@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertActions } from "@/components/alerts/AlertActions";
 import { ExplanationPanel } from "@/components/explain/ExplanationPanel";
 import { PatientStoryCard } from "@/components/patients/PatientStoryCard";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 import { WorkflowBadge } from "@/components/ui/StatusBadge";
 import { Button, Card, ErrorState } from "@/components/ui/primitives";
 import { api } from "@/lib/api/client";
@@ -75,17 +76,21 @@ function AuditTrail({ alert }: { alert: AlertOut }) {
 }
 
 export function DemoView() {
-  const { patients, alerts, simulation, run } = useVigil();
+  const { patients, alerts, simulation, run, reconnects } = useVigil();
   const series = useSeries();
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [cast, setCast] = useState<Cast | null>(null);
   const [alertId, setAlertId] = useState<string | null>(null);
   const [replay, setReplay] = useState<ReplayCompareOut | null>(null);
   const byPatient = useMemo(() => alertsByPatient(alerts), [alerts]);
   const patientsById = useMemo(() => new Map(patients.map((p) => [p.id, p])), [patients]);
+
+  // After a failure to load the scenario catalog, retry whenever the live connection returns.
+  const retry = cast ? 0 : reconnects;
 
   useEffect(() => {
     let cancelled = false;
@@ -94,14 +99,14 @@ export function DemoView() {
         if (cancelled) return;
         const picked = pickCast(c);
         setCast(picked);
-        if (!picked) setError("The seed 42 scenario no longer contains the patient types this walkthrough needs.");
+        setLoadError(picked ? null : "The seed 42 scenario no longer contains the patient types this walkthrough needs.");
       },
-      (e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)),
+      (e: unknown) => !cancelled && setLoadError(e instanceof Error ? e.message : String(e)),
     );
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retry]);
 
   const guard = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -180,7 +185,7 @@ export function DemoView() {
     <div className="mx-auto max-w-5xl space-y-5">
       <div className="space-y-2">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="text-sm font-medium text-fg">
+          <p className="text-sm font-medium text-fg" aria-live="polite">
             Step {step + 1} of {STEPS.length}: {STEPS[step]}
           </p>
           <p className="tabular text-xs text-fg-3">
@@ -200,9 +205,10 @@ export function DemoView() {
         </ol>
       </div>
 
+      {loadError && <ApiErrorState title="Cannot load the walkthrough" error={loadError} />}
       {error && <ErrorState title="That step failed" detail={error} />}
 
-      <Card as="div" className="space-y-4 p-6" aria-live="polite">
+      <Card as="div" className="space-y-4 p-6" aria-label={STEPS[step]}>
         {step === 0 && (
           <>
             <h2 className="text-xl font-semibold text-fg">Triage captures a moment. VIGIL notices when that picture changes.</h2>

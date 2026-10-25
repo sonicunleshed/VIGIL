@@ -62,6 +62,13 @@ class VisionSessionStatus(StrEnum):
     STOPPED = "stopped"
 
 
+class CheckinTokenStatus(StrEnum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+    REPLACED = "replaced"
+
+
 class WorkflowStatus(StrEnum):
     WAITING = "waiting"
     UNDER_REVIEW = "under_review"

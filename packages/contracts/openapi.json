@@ -469,6 +469,228 @@
         "title": "AuditEntryOut",
         "type": "object"
       },
+      "CheckinRevokeIn": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "maxLength": 40,
+            "minLength": 3,
+            "pattern": "^[a-z0-9-]+$",
+            "title": "Actor Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id"
+        ],
+        "title": "CheckinRevokeIn",
+        "type": "object"
+      },
+      "CheckinSessionOut": {
+        "description": "What the patient's phone needs to send a report with its check-in code.",
+        "properties": {
+          "display_code": {
+            "title": "Display Code",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "structured_tags": {
+            "description": "Tags a report may carry, sorted.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Structured Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "patient_id",
+          "display_code",
+          "expires_at",
+          "structured_tags"
+        ],
+        "title": "CheckinSessionOut",
+        "type": "object"
+      },
+      "CheckinTokenCreatedOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "issued_by": {
+            "title": "Issued By",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "revoked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked By"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CheckinTokenStatus",
+            "description": "Evaluated at the simulation clock."
+          },
+          "token": {
+            "description": "Shown once. Send as the X-Checkin-Token header.",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "status",
+          "issued_by",
+          "issued_at",
+          "expires_at",
+          "revoked_at",
+          "revoked_by",
+          "token"
+        ],
+        "title": "CheckinTokenCreatedOut",
+        "type": "object"
+      },
+      "CheckinTokenIn": {
+        "additionalProperties": false,
+        "description": "Staff create a check-in code for one patient. A new code replaces the patient's old one.",
+        "properties": {
+          "actor_id": {
+            "maxLength": 40,
+            "minLength": 3,
+            "pattern": "^[a-z0-9-]+$",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "patient_id": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Patient Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "actor_id"
+        ],
+        "title": "CheckinTokenIn",
+        "type": "object"
+      },
+      "CheckinTokenOut": {
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "issued_by": {
+            "title": "Issued By",
+            "type": "string"
+          },
+          "patient_id": {
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "revoked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked By"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CheckinTokenStatus",
+            "description": "Evaluated at the simulation clock."
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "status",
+          "issued_by",
+          "issued_at",
+          "expires_at",
+          "revoked_at",
+          "revoked_by"
+        ],
+        "title": "CheckinTokenOut",
+        "type": "object"
+      },
+      "CheckinTokenStatus": {
+        "enum": [
+          "active",
+          "expired",
+          "revoked",
+          "replaced"
+        ],
+        "title": "CheckinTokenStatus",
+        "type": "string"
+      },
       "CoverageOut": {
         "additionalProperties": false,
         "properties": {
@@ -3290,6 +3512,224 @@
         ]
       }
     },
+    "/api/checkin/session": {
+      "get": {
+        "operationId": "session_api_checkin_session_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Checkin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Checkin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinSessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Missing, unknown, revoked, replaced or expired code"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Session",
+        "tags": [
+          "checkin"
+        ]
+      }
+    },
+    "/api/checkin/tokens": {
+      "get": {
+        "operationId": "list_tokens_api_checkin_tokens_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Patient Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "active",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Active",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CheckinTokenOut"
+                  },
+                  "title": "Response List Tokens Api Checkin Tokens Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tokens",
+        "tags": [
+          "checkin"
+        ]
+      },
+      "post": {
+        "operationId": "create_token_api_checkin_tokens_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinTokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinTokenCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Unknown demo actor"
+          },
+          "404": {
+            "description": "Unknown patient"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Token",
+        "tags": [
+          "checkin"
+        ]
+      }
+    },
+    "/api/checkin/tokens/{token_id}/revoke": {
+      "post": {
+        "operationId": "revoke_token_api_checkin_tokens__token_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "title": "Token Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinRevokeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckinTokenOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Unknown demo actor"
+          },
+          "404": {
+            "description": "Unknown code"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Token",
+        "tags": [
+          "checkin"
+        ]
+      }
+    },
     "/api/evaluation": {
       "get": {
         "operationId": "evaluation_api_evaluation_get",
@@ -3927,7 +4367,26 @@
     },
     "/api/symptom-reports": {
       "post": {
+        "description": "Send `X-Checkin-Token` when the report comes from the patient's check-in page.",
         "operationId": "post_symptom_report_api_symptom_reports_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Checkin-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Checkin-Token"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3952,6 +4411,12 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "description": "Check-in code not active, or `patient_checkin` source without one"
+          },
+          "403": {
+            "description": "Check-in code belongs to a different patient"
+          },
           "404": {
             "description": "Unknown patient"
           },
@@ -3960,6 +4425,9 @@
           },
           "422": {
             "description": "Schema, unit, bounds or timestamp validation failed"
+          },
+          "429": {
+            "description": "Too many reports from this check-in code"
           }
         },
         "summary": "Post Symptom Report",

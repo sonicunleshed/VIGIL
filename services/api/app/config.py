@@ -38,6 +38,8 @@ class Settings:
     tick_seconds: float = 0.5
     # Accept observations timestamped at most this far ahead of the simulation clock.
     future_tolerance_seconds: int = 300
+    # A patient check-in code stops working this long after it was issued (simulation clock).
+    checkin_ttl_minutes: int = 240
 
 
 def get_settings() -> Settings:

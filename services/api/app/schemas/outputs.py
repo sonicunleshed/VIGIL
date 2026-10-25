@@ -11,6 +11,7 @@ from app.domain import (
     AlertActionKind,
     AlertStatus,
     AlertType,
+    CheckinTokenStatus,
     ObservationKind,
     ObservationQuality,
     ReassessmentOutcome,
@@ -221,6 +222,30 @@ class VisionIngestResult(_Out):
     event_id: str
     vision_event: VisionEventOut
     alerts: list[AlertOut] = Field(description="Review requests this event opened, if any.")
+
+
+class CheckinTokenOut(_Out):
+    id: str
+    patient_id: str
+    status: CheckinTokenStatus = Field(description="Evaluated at the simulation clock.")
+    issued_by: str
+    issued_at: datetime
+    expires_at: datetime
+    revoked_at: datetime | None
+    revoked_by: str | None
+
+
+class CheckinTokenCreatedOut(CheckinTokenOut):
+    token: str = Field(description="Shown once. Send as the X-Checkin-Token header.")
+
+
+class CheckinSessionOut(_Out):
+    """What the patient's phone needs to send a report with its check-in code."""
+
+    patient_id: str
+    display_code: str
+    expires_at: datetime
+    structured_tags: list[str] = Field(description="Tags a report may carry, sorted.")
 
 
 class TimelineOut(_Out):

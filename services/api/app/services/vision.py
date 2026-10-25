@@ -189,11 +189,14 @@ def list_sessions(db: Session, patient_id: str | None, active_only: bool) -> lis
 
 
 class RateLimiter:
-    """Sliding-window limit per camera session (in-process; single worker)."""
+    """Sliding-window limit per key, e.g. a camera session (in-process; single worker)."""
 
-    def __init__(self, max_events: int = 60, window_s: float = 60.0) -> None:
+    def __init__(
+        self, max_events: int = 60, window_s: float = 60.0, what: str = "camera events per minute"
+    ) -> None:
         self.max_events = max_events
         self.window_s = window_s
+        self.what = what
         self._hits: dict[str, deque[float]] = {}
         self._lock = threading.Lock()
 
@@ -203,5 +206,5 @@ class RateLimiter:
             while q and now_s - q[0] > self.window_s:
                 q.popleft()
             if len(q) >= self.max_events:
-                raise RateLimited(f"more than {self.max_events} camera events per minute")
+                raise RateLimited(f"more than {self.max_events} {self.what}")
             q.append(now_s)
